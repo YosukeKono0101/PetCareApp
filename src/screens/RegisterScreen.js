@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { View, TextInput, Button, StyleSheet, Alert } from "react-native";
 
-const LoginScreen = ({ navigation }) => {
+const RegisterScreen = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = async () => {
+  const handleRegister = async () => {
     try {
-      const response = await fetch("http://192.168.1.39:8081/login", {
+      const response = await fetch("http://192.168.1.39:8081/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -16,14 +16,15 @@ const LoginScreen = ({ navigation }) => {
       });
       const json = await response.json();
       if (response.status === 200) {
-        Alert.alert("Success", "Login successful", [
-          { text: "OK", onPress: () => navigation.navigate("Home") },
-        ]);
+        Alert.alert("Success", "Registration successful");
       } else {
         Alert.alert("Failed", json.message);
       }
     } catch (error) {
-      Alert.alert("Error", "An error occurred. Please try again.");
+      Alert.alert(
+        "Error",
+        "An error occurred during registration: " + error.message
+      );
     }
   };
 
@@ -42,7 +43,7 @@ const LoginScreen = ({ navigation }) => {
         secureTextEntry
         style={styles.input}
       />
-      <Button title="Login" onPress={handleLogin} />
+      <Button title="Register" onPress={handleRegister} />
     </View>
   );
 };
@@ -63,4 +64,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoginScreen;
+export default RegisterScreen;
