@@ -1,12 +1,42 @@
-import React from "react";
-import { View, Text, Button, StyleSheet, ScrollView } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  Button,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
 
 const HomeScreen = ({ navigation }) => {
-  // mock data
-  const pets = [
-    { id: 1, name: "Rex", type: "Dog" },
-    { id: 2, name: "Whiskers", type: "Cat" },
-  ];
+  const [pets, setPets] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPets = async () => {
+      try {
+        const response = await fetch("http://192.168.1.39:3000/pets");
+        const json = await response.json();
+        console.log("Fetched pets:", json);
+        if (Array.isArray(json)) {
+          setPets(json);
+        } else {
+          console.error("Fetched data is not an array:", json);
+          setPets([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch pets:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPets();
+  }, []);
+
+  if (isLoading) {
+    return <ActivityIndicator size="large" color="#0000ff" />;
+  }
 
   return (
     <ScrollView style={styles.container}>
