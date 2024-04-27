@@ -1,15 +1,17 @@
 const express = require("express");
-const mysql = require("mysql");
+const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
 const PORT = 3000;
 
-const connection = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE,
-});
+const connection = mysql
+  .createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE,
+  })
+  .promise();
 
 // connect to the database
 connection.connect((err) => {
@@ -31,26 +33,20 @@ app.post("/register", async (req, res) => {
   const { username, password } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const query = "INSERT INTO users (username, password) VALUES (?, ?)";
-    connection.query(query, [username, hashedPassword], (error, results) => {
-      if (error) {
-        return res.status(500).send({
-          status: "error",
-          message: "Database operation failed",
-          error: error,
-        });
-      }
-      res.send({
-        status: "success",
-        message: "User registered successfully",
-        userId: results.insertId,
-      });
+    const [results] = await connection.query(
+      "INSERT INTO users (username, password) VALUES (?, ?)",
+      [username, hashedPassword]
+    );
+    res.send({
+      status: "success",
+      message: "User registered successfully",
+      userId: results.insertId,
     });
   } catch (error) {
     res.status(500).send({
       status: "error",
-      message: "Password hashing failed",
-      error: error,
+      message: "Database operation failed",
+      error: error.message,
     });
   }
 });
@@ -58,15 +54,11 @@ app.post("/register", async (req, res) => {
 // user authentication
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
-  const query = "SELECT * FROM users WHERE username = ?";
-  connection.query(query, [username], async (error, results) => {
-    if (error) {
-      return res.status(500).send({
-        status: "error",
-        message: "Database operation failed",
-        error: error,
-      });
-    }
+  try {
+    const [results] = await connection.execute(
+      "SELECT * FROM users WHERE username = ?",
+      [username]
+    );
     if (results.length === 0) {
       res.status(401).send({ status: "error", message: "User not found" });
     } else {
@@ -79,7 +71,13 @@ app.post("/login", async (req, res) => {
           .send({ status: "error", message: "Invalid username or password" });
       }
     }
-  });
+  } catch (error) {
+    res.status(500).send({
+      status: "error",
+      message: "Database operation failed",
+      error: error.message,
+    });
+  }
 });
 
 /********************/
@@ -87,80 +85,80 @@ app.post("/login", async (req, res) => {
 /********************/
 
 // add pet info to the database
-app.post("/pets", (req, res) => {
+app.post("/pets", async (req, res) => {
   const { name, type } = req.body;
   const query = "INSERT INTO pets (name, type) VALUES (?, ?)";
-  connection.query(query, [name, type], (error, results) => {
-    if (error) {
-      return res.status(500).send({
-        status: "error",
-        message: "Database operation failed",
-        error: error,
-      });
-    }
+  try {
+    const [results] = await connection.execute(query, [name, type]);
     res.send({
       status: "success",
       message: "Pet added successfully",
       petId: results.insertId,
     });
-  });
+  } catch (error) {
+    res.status(500).send({
+      status: "error",
+      message: "Database operation failed",
+      error: error,
+    });
+  }
 });
 
 // get pet info from the database
-app.get("/pets", (req, res) => {
-  connection.query("SELECT * FROM pets", (error, results) => {
-    if (error) {
-      return res.status(500).send({
-        status: "error",
-        message: "Failed to retrieve pets",
-        error: error,
-      });
-    }
+app.get("/pets", async (req, res) => {
+  try {
+    const [results] = await connection.execute("SELECT * FROM pets");
     res.send(results);
-  });
+  } catch (error) {
+    res.status(500).send({
+      status: "error",
+      message: "Failed to retrieve pets",
+      error: error,
+    });
+  }
 });
 
 // update pet info by id from the database
-app.put("/pets/:id", (req, res) => {
+app.put("/pets/:id", async (req, res) => {
   const { name, type } = req.body;
   const { id } = req.params;
   const query = "UPDATE pets SET name = ?, type = ? WHERE id = ?";
-  connection.query(query, [name, type, id], (error, results) => {
-    if (error) {
-      return res.status(500).send({
-        status: "error",
-        message: "Database operation failed",
-        error: error,
-      });
-    }
+  try {
+    const [results] = await connection.execute(query, [name, type, id]);
     if (results.affectedRows === 0) {
       return res
         .status(404)
         .send({ status: "error", message: "Pet not found" });
     }
     res.send({ status: "success", message: "Pet updated successfully" });
-  });
+  } catch (error) {
+    res.status(500).send({
+      status: "error",
+      message: "Database operation failed",
+      error: error,
+    });
+  }
 });
 
 // delete pet info from the database
-app.delete("/pets/:id", (req, res) => {
+app.delete("/pets/:id", async (req, res) => {
   const { id } = req.params;
   const query = "DELETE FROM pets WHERE id = ?";
-  connection.query(query, [id], (error, results) => {
-    if (error) {
-      return res.status(500).send({
-        status: "error",
-        message: "Database operation failed",
-        error: error,
-      });
-    }
+  try {
+    const [results] = await connection.execute(query, [id]);
     if (results.affectedRows === 0) {
       return res
         .status(404)
         .send({ status: "error", message: "Pet not found" });
     }
     res.send({ status: "success", message: "Pet deleted successfully" });
-  });
+  } catch (error) {
+    res.status(500).send({
+      status: "error",
+      message: "Database operation failed",
+      error: error,
+    });
+  }
 });
 
 /********************/
@@ -168,79 +166,79 @@ app.delete("/pets/:id", (req, res) => {
 /********************/
 
 // add health log to the database
-app.post("/health-logs", (req, res) => {
-  const { pet_id, log_data, details } = req.body;
+app.post("/health-logs", async (req, res) => {
+  const { pet_id, log_date, details } = req.body;
   const query =
-    "INSERT INTO health_logs (pet_id, log_data, details) VALUES (?, ?, ?)";
-  connection.query(query, [pet_id, log_data, details], (error, results) => {
-    if (error) {
-      return res.status(500).send({
-        status: "error",
-        message: "Database operation failed",
-        error: error,
-      });
-    }
+    "INSERT INTO health_logs (pet_id, log_date, details) VALUES (?, ?, ?)";
+  try {
+    const [results] = await connection.execute(query, [
+      pet_id,
+      log_date,
+      details,
+    ]);
     res.send({
       status: "success",
       message: "Health log added successfully",
       logId: results.insertId,
     });
-  });
+  } catch (error) {
+    res.status(500).send({
+      status: "error",
+      message: "Database operation failed",
+      error: error,
+    });
+  }
 });
 
 // get health logs from the database
-app.get("/health-logs", (req, res) => {
+app.get("/health-logs", async (req, res) => {
   const query = "SELECT * FROM health_logs";
-  connection.query(query, (error, results) => {
-    if (error) {
-      return res.status(500).send({
-        status: "error",
-        message: "Failed to retrieve health logs",
-        error: error,
-      });
-    }
+  try {
+    const [results] = await connection.execute(query);
     res.send(results);
-  });
+  } catch (error) {
+    res.status(500).send({
+      status: "error",
+      message: "Failed to retrieve health logs",
+      error: error,
+    });
+  }
 });
 
 // update health log by id from the database
-app.put("/health-logs/:id", (req, res) => {
+app.put("/health-logs/:id", async (req, res) => {
   const { id } = req.params;
-  const { pet_id, log_data, details } = req.body;
+  const { pet_id, log_date, details } = req.body;
   const query =
-    "UPDATE health_logs SET pet_id = ?, log_data = ?, details = ? WHERE id = ?";
-  connection.query(query, [pet_id, log_data, details, id], (error, results) => {
-    if (error) {
-      return res.status(500).send({
-        status: "error",
-        message: "Failed to update health log",
-        error: error,
-      });
-    }
+    "UPDATE health_logs SET pet_id = ?, log_date = ?, details = ? WHERE id = ?";
+  try {
+    const [results] = await connection.execute(query, [
+      pet_id,
+      log_date,
+      details,
+      id,
+    ]);
     if (results.affectedRows === 0) {
       return res
         .status(404)
         .send({ status: "error", message: "Health log not found" });
     }
-    res.status({
-      status: "success",
-      message: "Health log updated successfully",
+    res.send({ status: "success", message: "Health log updated successfully" });
+  } catch (error) {
+    res.status(500).send({
+      status: "error",
+      message: "Failed to update health log",
+      error: error,
     });
-  });
+  }
 });
 
 // delete health log from the database
-app.delete("/health-logs/:id", (req, res) => {
+app.delete("/health-logs/:id", async (req, res) => {
   const { id } = req.params;
   const query = "DELETE FROM health_logs WHERE id = ?";
-  connection.query(query, [id], (error, results) => {
-    if (error) {
-      return res.status(500).send({
-        status: "error",
-        message: "Failed to delete health log",
-        error: error,
-      });
-    }
+  try {
+    const [results] = await connection.execute(query, [id]);
     if (results.affectedRows === 0) {
       return res
         .status(404)
@@ -250,7 +248,13 @@ app.delete("/health-logs/:id", (req, res) => {
       status: "success",
       message: "Health log deleted successfully",
     });
-  });
+  } catch (error) {
+    res.status(500).send({
+      status: "error",
+      message: "Failed to delete health log",
+      error: error,
+    });
+  }
 });
 
 /********************/
@@ -258,87 +262,82 @@ app.delete("/health-logs/:id", (req, res) => {
 /********************/
 
 // add vaccination to the database
-app.post("/care/vaccination", (req, res) => {
+app.post("/care/vaccination", async (req, res) => {
   const { pet_id, vaccine_name, vaccination_date } = req.body;
   const query =
     "INSERT INTO vaccinations (pet_id, vaccine_name, vaccination_date) VALUES (?, ?, ?)";
-  connection.query(
-    query,
-    [pet_id, vaccine_name, vaccination_date],
-    (error, results) => {
-      if (error) {
-        return res.status(500).send({
-          status: "error",
-          message: "Database operation failed",
-          error: error,
-        });
-      }
-      res.send({
-        status: "success",
-        message: "Vaccination added successfully",
-        vaccinationId: results.insertId,
-      });
-    }
-  );
+  try {
+    const [results] = await connection.execute(query, [
+      pet_id,
+      vaccine_name,
+      vaccination_date,
+    ]);
+    res.send({
+      status: "success",
+      message: "Vaccination added successfully",
+      vaccinationId: results.insertId,
+    });
+  } catch (error) {
+    res.status(500).send({
+      status: "error",
+      message: "Database operation failed",
+      error: error,
+    });
+  }
 });
 
 // get vaccination from the database
-app.get("/care/vaccination", (req, res) => {
+app.get("/care/vaccination", async (req, res) => {
   const query = "SELECT * FROM vaccinations";
-  connection.query(query, (error, results) => {
-    if (error) {
-      return res.status(500).send({
-        status: "error",
-        message: "Failed to retrieve vaccinations",
-        error: error,
-      });
-    }
+  try {
+    const [results] = await connection.execute(query);
     res.send(results);
-  });
+  } catch (error) {
+    res.status(500).send({
+      status: "error",
+      message: "Failed to retrieve vaccinations",
+      error: error,
+    });
+  }
 });
 
 // update vaccination from the database
-app.put("/care/vaccination/:id", (req, res) => {
+app.put("/care/vaccination/:id", async (req, res) => {
   const { id } = req.params;
   const { pet_id, vaccine_name, vaccination_date } = req.body;
   const query =
     "UPDATE vaccinations SET pet_id = ?, vaccine_name = ?, vaccination_date = ? WHERE id = ?";
-  connection.query(
-    query,
-    [pet_id, vaccine_name, vaccination_date, id],
-    (error, results) => {
-      if (error) {
-        return res.status(500).send({
-          status: "error",
-          message: "Failed to update vaccination",
-          error: error,
-        });
-      }
-      if (results.affectedRows === 0) {
-        return res
-          .status(404)
-          .send({ status: "error", message: "Vaccination not found" });
-      }
-      res.send({
-        status: "success",
-        message: "Vaccination updated successfully",
-      });
+  try {
+    const [results] = await connection.execute(query, [
+      pet_id,
+      vaccine_name,
+      vaccination_date,
+      id,
+    ]);
+    if (results.affectedRows === 0) {
+      return res
+        .status(404)
+        .send({ status: "error", message: "Vaccination not found" });
     }
-  );
+    res.send({
+      status: "success",
+      message: "Vaccination updated successfully",
+    });
+  } catch (error) {
+    res.status(500).send({
+      status: "error",
+      message: "Failed to update vaccination",
+      error: error,
+    });
+  }
 });
 
 // delete vaccination from the database
-app.delete("/care/vaccination/:id", (req, res) => {
+app.delete("/care/vaccination/:id", async (req, res) => {
   const { id } = req.params;
   const query = "DELETE FROM vaccinations WHERE id = ?";
-  connection.query(query, [id], (error, results) => {
-    if (error) {
-      return res.status(500).send({
-        status: "error",
-        message: "Failed to delete vaccination",
-        error: error,
-      });
-    }
+  try {
+    const [results] = await connection.execute(query, [id]);
     if (results.affectedRows === 0) {
       return res
         .status(404)
@@ -348,7 +347,13 @@ app.delete("/care/vaccination/:id", (req, res) => {
       status: "success",
       message: "Vaccination deleted successfully",
     });
-  });
+  } catch (error) {
+    res.status(500).send({
+      status: "error",
+      message: "Failed to delete vaccination",
+      error: error,
+    });
+  }
 });
 
 app.listen(PORT, () => {
