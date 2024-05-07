@@ -1,3 +1,4 @@
+import { useFocusEffect } from "@react-navigation/native";
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -6,33 +7,36 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
+  Image,
 } from "react-native";
 
 const HomeScreen = ({ navigation }) => {
   const [pets, setPets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchPets = async () => {
-      try {
-        const response = await fetch("http://192.168.1.39:3000/pets");
-        const json = await response.json();
-        console.log("Fetched pets:", json);
-        if (Array.isArray(json)) {
-          setPets(json);
-        } else {
-          console.error("Fetched data is not an array:", json);
-          setPets([]);
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchPets = async () => {
+        try {
+          const response = await fetch("http://192.168.1.39:3000/pets");
+          const json = await response.json();
+          console.log("Fetched pets:", json);
+          if (Array.isArray(json)) {
+            setPets(json);
+          } else {
+            console.error("Fetched data is not an array:", json);
+            setPets([]);
+          }
+        } catch (error) {
+          console.error("Failed to fetch pets:", error);
+        } finally {
+          setIsLoading(false);
         }
-      } catch (error) {
-        console.error("Failed to fetch pets:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      };
 
-    fetchPets();
-  }, []);
+      fetchPets();
+    }, [])
+  );
 
   if (isLoading) {
     return <ActivityIndicator size="large" color="#0000ff" />;
@@ -43,6 +47,10 @@ const HomeScreen = ({ navigation }) => {
       <Text style={styles.title}>Your Pets</Text>
       {pets.map((pet) => (
         <View key={pet.id} style={styles.petCard}>
+          <Image
+            source={require("../../assets/pet_icon.jpeg")}
+            style={styles.image}
+          />
           <Text style={styles.petName}>{pet.name}</Text>
           <Text>{pet.type}</Text>
           <Button
@@ -51,10 +59,12 @@ const HomeScreen = ({ navigation }) => {
           />
         </View>
       ))}
-      <Button
-        title="Add New Pet"
-        onPress={() => navigation.navigate("AddPet")}
-      />
+      <View style={styles.addButtonContainer}>
+        <Button
+          title="Add New Pet"
+          onPress={() => navigation.navigate("AddPet")}
+        />
+      </View>
     </ScrollView>
   );
 };
@@ -74,10 +84,20 @@ const styles = StyleSheet.create({
     marginVertical: 5,
     backgroundColor: "#f8f8f8",
     borderRadius: 10,
+    alignItems: "center",
   },
   petName: {
     fontSize: 18,
     fontWeight: "bold",
+    marginVertical: 5,
+  },
+  image: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  addButtonContainer: {
+    marginTop: 20,
   },
 });
 

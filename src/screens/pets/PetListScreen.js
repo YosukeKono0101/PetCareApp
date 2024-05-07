@@ -1,66 +1,103 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, Button, FlatList, StyleSheet } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  Button,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  Image,
+} from "react-native";
 
 const PetListScreen = ({ navigation }) => {
   const [pets, setPets] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchPets = async () => {
-      const response = await fetch("http://192.168.1.39:3000/pets");
-      const json = await response.json();
-      setPets(json);
-    };
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchPets = async () => {
+        try {
+          const response = await fetch("http://192.168.1.39:3000/pets");
+          const json = await response.json();
+          console.log("Fetched pets:", json);
+          if (Array.isArray(json)) {
+            setPets(json);
+          } else {
+            console.error("Fetched data is not an array:", json);
+            setPets([]);
+          }
+        } catch (error) {
+          console.error("Failed to fetch pets:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
 
-    fetchPets();
-  }, []);
-
-  return (
-    <View style={styles.container}>
-      <FlatList
-        data={pets}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.item}>
-            <Text style={styles.title}>
-              {item.name} ({item.type})
-            </Text>
-            <Button
-              title="Edit"
-              onPress={() => navigation.navigate("EditPet", { petId: item.id })}
-            />
-            <Button title="Delete" onPress={() => handleDeletePet(item.id)} />
-          </View>
-        )}
-      />
-    </View>
+      fetchPets();
+    }, [])
   );
 
-  async function handleDeletePet(id) {
-    const response = await fetch(`http://192.168.1.39:3000/pets/${id}`, {
-      method: "DELETE",
-    });
-    if (response.ok) {
-      setPets((prevPets) => prevPets.filter((pet) => pet.id !== id));
-      Alert.alert("Success", "Pet deleted successfully");
-    } else {
-      Alert.alert("Error", "Failed to delete the pet");
-    }
+  if (isLoading) {
+    return <ActivityIndicator size="large" color="#0000ff" />;
   }
+
+  return (
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Your Pets</Text>
+      {pets.map((pet) => (
+        <View key={pet.id} style={styles.petCard}>
+          <Image
+            source={require("../../../assets/pet_icon.jpeg")}
+            style={styles.image}
+          />
+          <Text style={styles.petName}>{pet.name}</Text>
+          <Text>{pet.type}</Text>
+          <Button
+            title="View Details"
+            onPress={() => navigation.navigate("PetDetails", { petId: pet.id })}
+          />
+        </View>
+      ))}
+      <View style={styles.addButtonContainer}>
+        <Button
+          title="Add New Pet"
+          onPress={() => navigation.navigate("AddPet")}
+        />
+      </View>
+    </ScrollView>
+  );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: 20,
-  },
-  item: {
-    backgroundColor: "#f9c2ff",
-    padding: 20,
-    marginVertical: 8,
-    marginHorizontal: 16,
+    padding: 10,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
+    fontWeight: "bold",
+    marginVertical: 10,
+  },
+  petCard: {
+    padding: 20,
+    marginVertical: 5,
+    backgroundColor: "#f8f8f8",
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  petName: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginVertical: 5,
+  },
+  image: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  addButtonContainer: {
+    marginTop: 20,
   },
 });
 

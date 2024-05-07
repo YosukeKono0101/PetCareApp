@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, TextInput, Button, StyleSheet, Alert } from "react-native";
 
-const SignUpScreen = () => {
+const SignUpScreen = ({ navigation }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
@@ -18,7 +18,10 @@ const SignUpScreen = () => {
       const json = await response.json();
       if (response.status === 200) {
         Alert.alert("Success", "Registration successful", [
-          { text: "OK", onPress: () => navigation.navigate("User registered") },
+          {
+            text: "OK",
+            onPress: () => navigation.navigate("HomeTabs", { screen: "Home" }),
+          },
         ]);
       } else {
         Alert.alert("Failed", json.message);

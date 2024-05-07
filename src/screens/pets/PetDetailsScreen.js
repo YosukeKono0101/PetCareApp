@@ -1,55 +1,89 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Button, Image, StyleSheet, Alert } from "react-native";
+import {
+  View,
+  Text,
+  Button,
+  Image,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 
 const PetDetailsScreen = ({ route, navigation }) => {
   const { petId } = route.params;
-  const [petDetails, setPetDetails] = useState({
-    imageUrl: "",
-    name: "",
-    type: "",
-    age: "",
-    gender: "",
-    healthStatus: "",
-  });
+  const [petDetails, setPetDetails] = useState(null);
 
-  useEffect(() => {
-    const fetchPetDetails = async () => {
-      try {
-        const response = await fetch(`http://192.168.1.39:3000/pets/${petId}`);
-        const json = await response.json();
-        if (response.ok) {
-          setPetDetails({
-            imageUrl: json.imageUrl,
-            name: json.name,
-            type: json.type,
-            age: json.age,
-            gender: json.gender,
-            healthStatus: json.healthStatus,
-          });
-        } else {
-          throw new Error(json.message || "Unable to fetch data");
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchPetDetails = async () => {
+        try {
+          const response = await fetch(
+            `http://192.168.1.39:3000/pets/${petId}`
+          );
+          const json = await response.json();
+          if (response.ok) {
+            setPetDetails({
+              ...json,
+              gender: json.gender || "Not available",
+              breed: json.breed || "Not available",
+              age: json.age || "Not available",
+              weight: json.weight ? `${json.weight} kg` : "Not available",
+              birthDate: json.birthDate || "Not available",
+            });
+          } else {
+            throw new Error(json.message || "Unable to fetch data");
+          }
+        } catch (error) {
+          Alert.alert("Error", error.message);
+          setPetDetails(null);
         }
-      } catch (error) {
-        Alert.alert("Error", error.message);
-      }
-    };
+      };
 
-    fetchPetDetails();
-  }, [petId]);
+      fetchPetDetails();
+    }, [petId])
+  );
+
+  const handleDeletePet = async () => {
+    try {
+      const response = await fetch(`http://192.168.1.39:3000/pets/${petId}`, {
+        method: "DELETE",
+      });
+      const json = await response.json();
+      if (response.ok) {
+        Alert.alert("Success", "Pet deleted successfully", [
+          { text: "OK", onPress: () => navigation.goBack() },
+        ]);
+      } else {
+        throw new Error(json.message || "Failed to delete pet");
+      }
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    }
+  };
+
+  if (!petDetails) {
+    return <ActivityIndicator size="large" color="#0000ff" />;
+  }
 
   return (
     <View style={styles.container}>
-      <Image source={{ uri: petDetails.imageUrl }} style={styles.image} />
+      <Image
+        source={require("../../../assets/pet_icon.jpeg")}
+        style={styles.image}
+      />
       <Text style={styles.title}>{petDetails.name}</Text>
       <Text>Type: {petDetails.type}</Text>
-      <Text>Age: {petDetails.age}</Text>
       <Text>Gender: {petDetails.gender}</Text>
-      <Text>Health Status: {petDetails.healthStatus}</Text>
+      <Text>Breed: {petDetails.breed}</Text>
+      <Text>Age: {petDetails.age}</Text>
+      <Text>Weight: {petDetails.weight}</Text>
+      <Text>Birth Date: {petDetails.birthDate}</Text>
       <Button
         title="Edit"
         onPress={() => navigation.navigate("EditPet", { petId })}
       />
-      <Button title="Delete" onPress={() => console.log("Delete Pet")} />
+      <Button title="Delete" onPress={handleDeletePet} />
     </View>
   );
 };

@@ -54,15 +54,19 @@ app.post("/register", async (req, res) => {
 // user authentication
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
+  console.log("Login attempt for username:", username);
+  console.log("Login attempt for password:", password);
   try {
     const [results] = await connection.execute(
       "SELECT * FROM users WHERE username = ?",
       [username]
     );
+    console.log("User fetch results:", results);
     if (results.length === 0) {
       res.status(401).send({ status: "error", message: "User not found" });
     } else {
       const match = await bcrypt.compare(password, results[0].password);
+      console.log("Password comparison results:", match);
       if (match) {
         res.send({ status: "success", message: "Login successfully" });
       } else {
@@ -86,10 +90,21 @@ app.post("/login", async (req, res) => {
 
 // add pet info to the database
 app.post("/pets", async (req, res) => {
-  const { name, type } = req.body;
-  const query = "INSERT INTO pets (name, type) VALUES (?, ?)";
+  const { name, type, gender, breed, age, weight, birthDate } = req.body;
+  const query = `
+    INSERT INTO pets (name, type, gender, breed, age, weight, birthDate)
+    VALUES (?, ?, ?, ?, ?, ?, ?)`;
+
   try {
-    const [results] = await connection.execute(query, [name, type]);
+    const [results] = await connection.execute(query, [
+      name,
+      type,
+      gender,
+      breed,
+      parseInt(age, 10), // Assuming age is a number and needs to be parsed
+      parseFloat(weight), // Assuming weight is a decimal and needs to be parsed
+      new Date(birthDate),
+    ]);
     res.send({
       status: "success",
       message: "Pet added successfully",
@@ -99,7 +114,7 @@ app.post("/pets", async (req, res) => {
     res.status(500).send({
       status: "error",
       message: "Database operation failed",
-      error: error,
+      error: error.message,
     });
   }
 });
@@ -118,13 +133,50 @@ app.get("/pets", async (req, res) => {
   }
 });
 
+// get pet details by if from the database
+app.get("/pets/:id", async (req, res) => {
+  const { id } = req.params;
+  const query = `
+    SELECT name, type, gender, breed, age, weight, DATE_FORMAT(birthDate, '%Y-%m-%d') AS birthDate
+    FROM pets
+    WHERE id = ?`;
+
+  try {
+    const [results] = await connection.execute(query, [id]);
+    if (results.length === 0) {
+      res.status(404).send({ status: "error", message: "Pet not found" });
+    } else {
+      res.send(results[0]);
+    }
+  } catch (error) {
+    res.status(500).send({
+      status: "error",
+      message: "Failed to retrieve pet details",
+      error: error,
+    });
+  }
+});
+
 // update pet info by id from the database
 app.put("/pets/:id", async (req, res) => {
-  const { name, type } = req.body;
   const { id } = req.params;
-  const query = "UPDATE pets SET name = ?, type = ? WHERE id = ?";
+  const { name, type, gender, breed, age, weight, birthDate } = req.body;
+  const query = `
+    UPDATE pets
+    SET name = ?, type = ?, gender = ?, breed = ?, age = ?, weight = ?, birthDate = ?
+    WHERE id = ?`;
+
   try {
-    const [results] = await connection.execute(query, [name, type, id]);
+    const [results] = await connection.execute(query, [
+      name,
+      type,
+      gender,
+      breed,
+      age,
+      weight,
+      birthDate,
+      id,
+    ]);
     if (results.affectedRows === 0) {
       return res
         .status(404)
@@ -135,7 +187,7 @@ app.put("/pets/:id", async (req, res) => {
     res.status(500).send({
       status: "error",
       message: "Database operation failed",
-      error: error,
+      error: error.message,
     });
   }
 });
