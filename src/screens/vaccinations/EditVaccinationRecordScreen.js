@@ -10,7 +10,7 @@ const EditVaccinationRecordScreen = ({ route, navigation }) => {
     const fetchVaccinationDetails = async () => {
       try {
         const response = await fetch(
-          `http://192.168.1.39:3000/care/vaccination/${vaccinationId}`
+          `http://192.168.1.39:3000/vaccination/${vaccinationId}`
         );
         const json = await response.json();
         setVaccineName(json.vaccine_name);
@@ -26,7 +26,7 @@ const EditVaccinationRecordScreen = ({ route, navigation }) => {
   const handleUpdateVaccination = async () => {
     try {
       const response = await fetch(
-        `http://192.168.1.39:3000/care/vaccination/${vaccinationId}`,
+        `http://192.168.1.39:3000/vaccination/${vaccinationId}`,
         {
           method: "PUT",
           headers: {

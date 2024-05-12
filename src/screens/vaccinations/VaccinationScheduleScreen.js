@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, FlatList, Button, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  Button,
+  Image,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
 
 const VaccinationScheduleScreen = ({ navigation }) => {
   const [vaccinations, setVaccinations] = useState([]);
@@ -7,9 +15,7 @@ const VaccinationScheduleScreen = ({ navigation }) => {
   useEffect(() => {
     const fetchVaccinations = async () => {
       try {
-        const response = await fetch(
-          "http://192.168.1.39:3000/care/vaccination"
-        );
+        const response = await fetch("http://192.168.1.39:3000/vaccination");
         const json = await response.json();
         setVaccinations(json);
       } catch (error) {
@@ -21,50 +27,38 @@ const VaccinationScheduleScreen = ({ navigation }) => {
   }, []);
 
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={vaccinations}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.item}>
-            <Text style={styles.title}>
-              {item.vaccine_name} -{" "}
-              {new Date(item.vaccination_date).toDateString()}
-            </Text>
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Vaccination Schedule</Text>
+      {vaccinations.map((vaccination) => (
+        <View key={vaccination.id} style={styles.vaccinationCard}>
+          <Image
+            source={require("../../../assets/vaccination.png")}
+            style={styles.image}
+          />
+          <Text style={styles.vaccinationDetail}>
+            {vaccination.vaccine_name} -{" "}
+            {new Date(vaccination.vaccination_date).toLocaleDateString()}
+          </Text>
+          <View style={styles.buttonContainer}>
             <Button
-              title="Edit"
+              title="View Details"
               onPress={() =>
-                navigation.navigate("EditVaccinationRecord", {
-                  vaccinationId: item.id,
+                navigation.navigate("VaccinationDetailsScreen", {
+                  vaccinationId: vaccination.id,
                 })
               }
             />
-            <Button
-              title="Delete"
-              onPress={() => handleDeleteVaccination(item.id)}
-            />
           </View>
-        )}
-      />
-    </View>
+        </View>
+      ))}
+      <View style={styles.addButtonContainer}>
+        <Button
+          title="Add New Vaccination"
+          onPress={() => navigation.navigate("AddVaccinationRecord")}
+        />
+      </View>
+    </ScrollView>
   );
-
-  async function handleDeleteVaccination(id) {
-    const response = await fetch(
-      `http://192.168.1.39:3000/care/vaccination/${id}`,
-      {
-        method: "DELETE",
-      }
-    );
-    if (response.ok) {
-      setVaccinations((prev) =>
-        prev.filter((vaccination) => vaccination.id !== id)
-      );
-      alert("Vaccination deleted successfully");
-    } else {
-      alert("Failed to delete vaccination");
-    }
-  }
 };
 
 const styles = StyleSheet.create({
@@ -72,14 +66,37 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
-  item: {
-    backgroundColor: "#f9c2ff",
+  title: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
+  vaccinationCard: {
+    backgroundColor: "#f8f8f8",
     padding: 20,
     marginVertical: 8,
-    marginHorizontal: 16,
+    borderRadius: 10,
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
-  title: {
+  vaccinationDetail: {
+    flex: 1,
+    marginLeft: 20, // Added space between the image and text
     fontSize: 18,
+  },
+  image: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+  },
+  addButtonContainer: {
+    marginTop: 20,
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
   },
 });
 
