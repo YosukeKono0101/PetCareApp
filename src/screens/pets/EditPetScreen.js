@@ -1,18 +1,38 @@
 import React, { useState, useEffect } from "react";
-import { View, TextInput, Button, StyleSheet, Alert } from "react-native";
+import {
+  View,
+  TextInput,
+  Button,
+  StyleSheet,
+  Alert,
+  ScrollView,
+} from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 const EditPetScreen = ({ route, navigation }) => {
   const { petId } = route.params;
   const [name, setName] = useState("");
   const [type, setType] = useState("");
+  const [gender, setGender] = useState("");
+  const [breed, setBreed] = useState("");
+  const [age, setAge] = useState("");
+  const [weight, setWeight] = useState("");
+  const [birthDate, setBirthDate] = useState(new Date());
 
   useEffect(() => {
     const fetchPetDetails = async () => {
       try {
         const response = await fetch(`http://192.168.1.39:3000/pets/${petId}`);
         const json = await response.json();
-        setName(json.name);
-        setType(json.type);
+        if (json) {
+          setName(json.name);
+          setType(json.type);
+          setGender(json.gender);
+          setBreed(json.breed);
+          setAge(json.age);
+          setWeight(json.weight);
+          setBirthDate(new Date(json.birthDate));
+        }
       } catch (error) {
         Alert.alert(
           "Error",
@@ -31,7 +51,15 @@ const EditPetScreen = ({ route, navigation }) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name, type }),
+        body: JSON.stringify({
+          name,
+          type,
+          gender,
+          breed,
+          age,
+          weight,
+          birthDate: birthDate.toISOString(),
+        }),
       });
       if (response.ok) {
         Alert.alert("Success", "Pet updated successfully", [
@@ -47,7 +75,7 @@ const EditPetScreen = ({ route, navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <TextInput
         placeholder="Pet Name"
         value={name}
@@ -55,13 +83,47 @@ const EditPetScreen = ({ route, navigation }) => {
         style={styles.input}
       />
       <TextInput
-        placeholder="Pet Type (e.g., Dog, Cat)"
+        placeholder="Type (e.g., Dog, Cat)"
         value={type}
         onChangeText={setType}
         style={styles.input}
       />
+      <TextInput
+        placeholder="Gender"
+        value={gender}
+        onChangeText={setGender}
+        style={styles.input}
+      />
+      <TextInput
+        placeholder="Breed"
+        value={breed}
+        onChangeText={setBreed}
+        style={styles.input}
+      />
+      <TextInput
+        placeholder="Age"
+        value={age}
+        onChangeText={setAge}
+        style={styles.input}
+        keyboardType="numeric"
+      />
+      <TextInput
+        placeholder="Weight (kg)"
+        value={weight}
+        onChangeText={setWeight}
+        style={styles.input}
+        keyboardType="numeric"
+      />
+      <DateTimePicker
+        value={birthDate}
+        mode="date"
+        display="default"
+        onChange={(event, selectedDate) =>
+          setBirthDate(selectedDate || birthDate)
+        }
+      />
       <Button title="Update Pet" onPress={handleUpdatePet} />
-    </View>
+    </ScrollView>
   );
 };
 
@@ -69,8 +131,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    justifyContent: "center",
-    backgroundColor: "#fff",
   },
   input: {
     height: 40,
