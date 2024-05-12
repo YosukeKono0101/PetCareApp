@@ -1,71 +1,109 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, Button, FlatList, StyleSheet } from "react-native";
+import React, { useState, useCallback } from "react";
+import {
+  View,
+  Text,
+  Button,
+  StyleSheet,
+  ScrollView,
+  Image,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 
 const HealthLogListScreen = ({ navigation }) => {
   const [healthLogs, setHealthLogs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchHealthLogs = async () => {
-      const response = await fetch("http://192.168.1.39:3000/health-logs");
-      const json = await response.json();
-      setHealthLogs(json);
-    };
+  useFocusEffect(
+    useCallback(() => {
+      const fetchHealthLogs = async () => {
+        try {
+          const response = await fetch("http://192.168.1.39:3000/health-logs");
+          const json = await response.json();
+          if (Array.isArray(json)) {
+            const formattedLogs = json.map((log) => ({
+              ...log,
+              log_date: new Date(log.log_date).toLocaleDateString(),
+            }));
+            setHealthLogs(formattedLogs);
+          } else {
+            throw new Error("Fetched data is not an array");
+          }
+        } catch (error) {
+          Alert.alert("Error", error.message || "Failed to fetch health logs");
+        } finally {
+          setIsLoading(false);
+        }
+      };
 
-    fetchHealthLogs();
-  }, []);
-
-  return (
-    <View style={styles.container}>
-      <FlatList
-        data={healthLogs}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.item}>
-            <Text style={styles.title}>
-              {item.log_date} - {item.details}
-            </Text>
-            <Button
-              title="Edit"
-              onPress={() =>
-                navigation.navigate("EditHealthLog", { logId: item.id })
-              }
-            />
-            <Button
-              title="Delete"
-              onPress={() => handleDeleteHealthLog(item.id)}
-            />
-          </View>
-        )}
-      />
-    </View>
+      fetchHealthLogs();
+    }, [])
   );
 
-  async function handleDeleteHealthLog(id) {
-    const response = await fetch(`http://192.168.1.39:3000/health-logs/${id}`, {
-      method: "DELETE",
-    });
-    if (response.ok) {
-      setHealthLogs((prevLogs) => prevLogs.filter((log) => log.id !== id));
-      Alert.alert("Success", "Health log deleted successfully");
-    } else {
-      Alert.alert("Error", "Failed to delete the health log");
-    }
+  if (isLoading) {
+    return <ActivityIndicator size="large" color="#0000ff" />;
   }
+
+  return (
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Your Health Logs</Text>
+      {healthLogs.map((log) => (
+        <View key={log.id} style={styles.logCard}>
+          <Image
+            source={require("../../../assets/health_log.png")}
+            style={styles.image}
+          />
+          <Text style={styles.logDetail}>
+            {log.log_date} - {log.details}
+          </Text>
+          <Button
+            title="View Details"
+            onPress={() =>
+              navigation.navigate("HealthLogDetails", { logId: log.id })
+            }
+          />
+        </View>
+      ))}
+      <View style={styles.addButtonContainer}>
+        <Button
+          title="Add New Health Log"
+          onPress={() => navigation.navigate("AddHealthLog")}
+        />
+      </View>
+    </ScrollView>
+  );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: 20,
-  },
-  item: {
-    backgroundColor: "#f9c2ff",
-    padding: 20,
-    marginVertical: 8,
-    marginHorizontal: 16,
+    padding: 10,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
+    fontWeight: "bold",
+    marginVertical: 10,
+  },
+  logCard: {
+    padding: 20,
+    marginVertical: 5,
+    backgroundColor: "#f8f8f8",
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  logDetail: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  image: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 10,
+  },
+  addButtonContainer: {
+    marginTop: 20,
   },
 });
 

@@ -1,90 +1,125 @@
 import React, { useState, useEffect } from "react";
-import { View, TextInput, Button, StyleSheet, Alert } from "react-native";
+import {
+  View,
+  TextInput,
+  Button,
+  StyleSheet,
+  Alert,
+  ScrollView,
+} from "react-native";
+import { Picker } from "@react-native-picker/picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
-const EditHealthLogScreen = ({ route, navigation }) => {
-  const { logId } = route.params;
-  const [logDate, setLogDate] = useState("");
+const AddHealthLogScreen = ({ navigation }) => {
+  const [pets, setPets] = useState([]);
+  const [selectedPetId, setSelectedPetId] = useState(null);
+  const [logDate, setLogDate] = useState(new Date());
   const [details, setDetails] = useState("");
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   useEffect(() => {
-    const fetchHealthLogDetails = async () => {
+    const fetchPets = async () => {
       try {
-        const response = await fetch(
-          `http://192.168.1.39:3000/health-logs/${logId}`
-        );
+        const response = await fetch("http://192.168.1.39:3000/pets");
         const json = await response.json();
-        setLogDate(json.log_date);
-        setDetails(json.details);
+        setPets(json);
+        if (json.length > 0) {
+          setSelectedPetId(json[0].id);
+        }
       } catch (error) {
-        Alert.alert(
-          "Error",
-          "An error occurred while fetching the health log details"
-        );
+        Alert.alert("Error", "Failed to load pets");
       }
     };
+    fetchPets();
+  }, []);
 
-    fetchHealthLogDetails();
-  }, [logId]);
-
-  const handleUpdateHealthLog = async () => {
+  const handleAddHealthLog = async () => {
+    if (!selectedPetId) {
+      Alert.alert("Error", "Please select a pet first.");
+      return;
+    }
     try {
-      const response = await fetch(
-        `http://192.168.1.39:3000/health-logs/${logId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ log_date: logDate, details }),
-        }
-      );
-      if (response.ok) {
-        Alert.alert("Success", "Health log updated successfully", [
+      const response = await fetch("http://192.168.1.39:3000/health-logs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          pet_id: selectedPetId,
+          log_date: logDate.toISOString(),
+          details,
+        }),
+      });
+      if (response.status === 200) {
+        Alert.alert("Success", "Health log added successfully", [
           { text: "OK", onPress: () => navigation.goBack() },
         ]);
       } else {
         const json = await response.json();
-        Alert.alert("Failed", json.message);
+        Alert.alert("Error", json.message);
       }
     } catch (error) {
-      Alert.alert("Error", "An error occurred while updating the health log");
+      Alert.alert("Error", "An error occurred while adding the health log");
     }
   };
 
   return (
-    <View style={styles.container}>
-      <TextInput
-        placeholder="Log Date"
-        value={logDate}
-        onChangeText={setLogDate}
-        style={styles.input}
-      />
+    <ScrollView contentContainerStyle={styles.container}>
+      {pets.length > 0 && (
+        <Picker
+          selectedValue={selectedPetId}
+          onValueChange={(itemValue) => setSelectedPetId(itemValue)}
+          style={styles.picker}
+        >
+          {pets.map((pet) => (
+            <Picker.Item label={pet.name} value={pet.id} key={pet.id} />
+          ))}
+        </Picker>
+      )}
+      <Button title="Choose Log Date" onPress={() => setShowDatePicker(true)} />
+      {showDatePicker && (
+        <DateTimePicker
+          value={logDate}
+          mode="date"
+          display="default"
+          onChange={(event, selectedDate) => {
+            setShowDatePicker(false);
+            if (selectedDate) {
+              setLogDate(selectedDate);
+            }
+          }}
+        />
+      )}
       <TextInput
         placeholder="Details"
         value={details}
         onChangeText={setDetails}
         style={styles.input}
         multiline
+        numberOfLines={4} // Makes it easier to type more text
       />
-      <Button title="Update Health Log" onPress={handleUpdateHealthLog} />
-    </View>
+      <Button title="Add Health Log" onPress={handleAddHealthLog} />
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     padding: 20,
     justifyContent: "center",
     backgroundColor: "#fff",
   },
+  picker: {
+    marginBottom: 20,
+  },
   input: {
-    height: 40,
+    height: 100, // Increased height
     borderColor: "gray",
     borderWidth: 1,
     marginBottom: 20,
     paddingHorizontal: 10,
+    textAlignVertical: "top", // Proper align for multiline
   },
 });
 
-export default EditHealthLogScreen;
+export default AddHealthLogScreen;
