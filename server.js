@@ -101,8 +101,8 @@ app.post("/pets", async (req, res) => {
       type,
       gender,
       breed,
-      parseInt(age, 10), // Assuming age is a number and needs to be parsed
-      parseFloat(weight), // Assuming weight is a decimal and needs to be parsed
+      parseInt(age, 10),
+      parseFloat(weight),
       new Date(birthDate),
     ]);
     res.send({
@@ -172,9 +172,9 @@ app.put("/pets/:id", async (req, res) => {
       type,
       gender,
       breed,
-      age,
-      weight,
-      birthDate,
+      parseInt(age, 10),
+      parseFloat(weight),
+      new Date(birthDate),
       id,
     ]);
     if (results.affectedRows === 0) {
@@ -225,7 +225,7 @@ app.post("/health-logs", async (req, res) => {
   try {
     const [results] = await connection.execute(query, [
       pet_id,
-      log_date,
+      new Date(log_date), // Ensure date format
       details,
     ]);
     res.send({
@@ -244,9 +244,8 @@ app.post("/health-logs", async (req, res) => {
 
 // get health logs from the database
 app.get("/health-logs", async (req, res) => {
-  const query = "SELECT * FROM health_logs";
   try {
-    const [results] = await connection.execute(query);
+    const [results] = await connection.execute("SELECT * FROM health_logs");
     res.send(results);
   } catch (error) {
     res.status(500).send({
@@ -257,12 +256,42 @@ app.get("/health-logs", async (req, res) => {
   }
 });
 
+// Get a specific health log by id from the database
+app.get("/health-logs/:id", async (req, res) => {
+  const { id } = req.params;
+  const query = `
+    SELECT hl.id, hl.log_date, hl.details, p.name as pet_name
+    FROM health_logs hl
+    JOIN pets p ON hl.pet_id = p.id
+    WHERE hl.id = ?`;
+
+  try {
+    const [results] = await connection.execute(query, [id]);
+    if (results.length > 0) {
+      res.send(results[0]);
+    } else {
+      res
+        .status(404)
+        .send({ status: "error", message: "Health log not found" });
+    }
+  } catch (error) {
+    res.status(500).send({
+      status: "error",
+      message: "Failed to retrieve health log",
+      error: error.message,
+    });
+  }
+});
+
 // update health log by id from the database
 app.put("/health-logs/:id", async (req, res) => {
   const { id } = req.params;
   const { pet_id, log_date, details } = req.body;
-  const query =
-    "UPDATE health_logs SET pet_id = ?, log_date = ?, details = ? WHERE id = ?";
+  const query = `
+    UPDATE health_logs
+    SET pet_id = ?, log_date = ?, details = ?
+    WHERE id = ?`;
+
   try {
     const [results] = await connection.execute(query, [
       pet_id,
@@ -280,7 +309,7 @@ app.put("/health-logs/:id", async (req, res) => {
     res.status(500).send({
       status: "error",
       message: "Failed to update health log",
-      error: error,
+      error: error.message,
     });
   }
 });
@@ -314,7 +343,7 @@ app.delete("/health-logs/:id", async (req, res) => {
 /********************/
 
 // add vaccination to the database
-app.post("/care/vaccination", async (req, res) => {
+app.post("/vaccination", async (req, res) => {
   const { pet_id, vaccine_name, vaccination_date } = req.body;
   const query =
     "INSERT INTO vaccinations (pet_id, vaccine_name, vaccination_date) VALUES (?, ?, ?)";
@@ -339,7 +368,7 @@ app.post("/care/vaccination", async (req, res) => {
 });
 
 // get vaccination from the database
-app.get("/care/vaccination", async (req, res) => {
+app.get("/vaccination", async (req, res) => {
   const query = "SELECT * FROM vaccinations";
   try {
     const [results] = await connection.execute(query);
@@ -353,8 +382,35 @@ app.get("/care/vaccination", async (req, res) => {
   }
 });
 
+// get a specific vaccination by id from the database
+app.get("/vaccination/:id", async (req, res) => {
+  const { id } = req.params; // Extracting the id from the request parameters
+  const query = "SELECT * FROM vaccinations WHERE id = ?";
+
+  try {
+    const [results] = await connection.execute(query, [id]);
+    if (results.length === 0) {
+      return res.status(404).send({
+        status: "error",
+        message: "Vaccination not found",
+      });
+    }
+    res.send({
+      status: "success",
+      message: "Vaccination retrieved successfully",
+      data: results[0],
+    });
+  } catch (error) {
+    res.status(500).send({
+      status: "error",
+      message: "Failed to retrieve vaccination",
+      error: error,
+    });
+  }
+});
+
 // update vaccination from the database
-app.put("/care/vaccination/:id", async (req, res) => {
+app.put("/vaccination/:id", async (req, res) => {
   const { id } = req.params;
   const { pet_id, vaccine_name, vaccination_date } = req.body;
   const query =
@@ -385,7 +441,7 @@ app.put("/care/vaccination/:id", async (req, res) => {
 });
 
 // delete vaccination from the database
-app.delete("/care/vaccination/:id", async (req, res) => {
+app.delete("/vaccination/:id", async (req, res) => {
   const { id } = req.params;
   const query = "DELETE FROM vaccinations WHERE id = ?";
   try {
