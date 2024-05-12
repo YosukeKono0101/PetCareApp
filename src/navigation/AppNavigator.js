@@ -8,11 +8,12 @@ import PetDetailsScreen from "../screens/pets/PetDetailsScreen";
 import PetListScreen from "../screens/pets/PetListScreen";
 import AddPetScreen from "../screens/pets/AddPetScreen";
 import EditPetScreen from "../screens/pets/EditPetScreen";
-import HealthLogScreen from "../screens/healthLogs/HealthLogListScreen";
+import HealthLogDetailsScreen from "../screens/healthLogs/HealthLogDetailsScreen";
 import HealthLogListScreen from "../screens/healthLogs/HealthLogListScreen";
 import AddHealthLogScreen from "../screens/healthLogs/AddHealthLogScreen";
 import EditHealthLogScreen from "../screens/healthLogs/EditHealthLogScreen";
 import VaccinationScheduleScreen from "../screens/vaccinations/VaccinationScheduleScreen";
+import VaccinationDetailsScreen from "../screens/vaccinations/VaccinationDetailsScreen";
 import AddVaccinationRecordScreen from "../screens/vaccinations/AddVaccinationRecordScreen";
 import EditVaccinationRecordScreen from "../screens/vaccinations/EditVaccinationRecordScreen";
 import LandingPageScreen from "../screens/LandingPageScreen";
@@ -82,9 +83,9 @@ function AppNavigator() {
         options={{ title: "Edit Pet" }}
       />
       <Stack.Screen
-        name="HealthLog"
-        component={HealthLogScreen}
-        options={{ title: "Health Log" }}
+        name="HealthLogDetails"
+        component={HealthLogDetailsScreen}
+        options={{ title: "Health Log Details" }}
       />
       <Stack.Screen
         name="AddHealthLog"
@@ -95,6 +96,11 @@ function AppNavigator() {
         name="EditHealthLog"
         component={EditHealthLogScreen}
         options={{ title: "Edit Health Log" }}
+      />
+      <Stack.Screen
+        name="VaccinationDetails"
+        component={VaccinationDetailsScreen}
+        options={{ title: "Vaccination Details" }}
       />
       <Stack.Screen
         name="AddVaccinationRecord"
