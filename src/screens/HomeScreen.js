@@ -44,7 +44,7 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Your Pets</Text>
+      <Text style={styles.title}>Home</Text>
       {pets.map((pet) => (
         <View key={pet.id} style={styles.petCard}>
           <Image
@@ -59,12 +59,6 @@ const HomeScreen = ({ navigation }) => {
           />
         </View>
       ))}
-      <View style={styles.addButtonContainer}>
-        <Button
-          title="Add New Pet"
-          onPress={() => navigation.navigate("AddPet")}
-        />
-      </View>
     </ScrollView>
   );
 };
