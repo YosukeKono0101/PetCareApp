@@ -4,14 +4,17 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import LoginScreen from "../screens/auth/LoginScreen";
 import SignUpScreen from "../screens/auth/SignUpScreen";
 import HomeScreen from "../screens/HomeScreen";
+// pet
 import PetDetailsScreen from "../screens/pets/PetDetailsScreen";
 import PetListScreen from "../screens/pets/PetListScreen";
 import AddPetScreen from "../screens/pets/AddPetScreen";
 import EditPetScreen from "../screens/pets/EditPetScreen";
+// health log
 import HealthLogDetailsScreen from "../screens/healthLogs/HealthLogDetailsScreen";
 import HealthLogListScreen from "../screens/healthLogs/HealthLogListScreen";
 import AddHealthLogScreen from "../screens/healthLogs/AddHealthLogScreen";
 import EditHealthLogScreen from "../screens/healthLogs/EditHealthLogScreen";
+// vaccination
 import VaccinationScheduleScreen from "../screens/vaccinations/VaccinationScheduleScreen";
 import VaccinationDetailsScreen from "../screens/vaccinations/VaccinationDetailsScreen";
 import AddVaccinationRecordScreen from "../screens/vaccinations/AddVaccinationRecordScreen";

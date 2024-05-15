@@ -384,7 +384,7 @@ app.get("/vaccination", async (req, res) => {
 
 // get a specific vaccination by id from the database
 app.get("/vaccination/:id", async (req, res) => {
-  const { id } = req.params; // Extracting the id from the request parameters
+  const { id } = req.params;
   const query = "SELECT * FROM vaccinations WHERE id = ?";
 
   try {
