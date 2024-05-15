@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,25 +6,27 @@ import {
   Image,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 
 const VaccinationScheduleScreen = ({ navigation }) => {
   const [vaccinations, setVaccinations] = useState([]);
 
-  useEffect(() => {
-    const fetchVaccinations = async () => {
-      try {
-        const response = await fetch("http://192.168.1.39:3000/vaccination");
-        const json = await response.json();
-        setVaccinations(json);
-      } catch (error) {
-        console.error("Failed to fetch vaccinations", error);
-      }
-    };
+  useFocusEffect(
+    useCallback(() => {
+      const fetchVaccinations = async () => {
+        try {
+          const response = await fetch("http://192.168.1.39:3000/vaccination");
+          const json = await response.json();
+          setVaccinations(json);
+        } catch (error) {
+          console.error("Failed to fetch vaccinations", error);
+        }
+      };
 
-    fetchVaccinations();
-  }, []);
+      fetchVaccinations();
+    }, [])
+  );
 
   return (
     <ScrollView style={styles.container}>
@@ -43,7 +45,7 @@ const VaccinationScheduleScreen = ({ navigation }) => {
             <Button
               title="View Details"
               onPress={() =>
-                navigation.navigate("VaccinationDetailsScreen", {
+                navigation.navigate("VaccinationDetails", {
                   vaccinationId: vaccination.id,
                 })
               }
@@ -82,7 +84,7 @@ const styles = StyleSheet.create({
   },
   vaccinationDetail: {
     flex: 1,
-    marginLeft: 20, // Added space between the image and text
+    marginLeft: 20,
     fontSize: 18,
   },
   image: {

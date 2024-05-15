@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { View, Button, StyleSheet, Alert, Platform } from "react-native";
+import {
+  View,
+  Button,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Alert,
+  Platform,
+  TextInput,
+} from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
@@ -8,6 +17,7 @@ const AddVaccinationRecordScreen = ({ navigation }) => {
   const [selectedPetId, setSelectedPetId] = useState(null);
   const [vaccineName, setVaccineName] = useState("");
   const [vaccinationDate, setVaccinationDate] = useState(new Date());
+  const [notes, setNotes] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const vaccines = ["Rabies", "DHPP", "Leptospirosis", "Lyme", "Bordetella"];
 
@@ -42,6 +52,7 @@ const AddVaccinationRecordScreen = ({ navigation }) => {
           pet_id: selectedPetId,
           vaccine_name: vaccineName,
           vaccination_date: vaccinationDate.toISOString().split("T")[0],
+          notes: notes,
         }),
       });
       if (response.ok) {
@@ -97,6 +108,13 @@ const AddVaccinationRecordScreen = ({ navigation }) => {
           onChange={onDateChange}
         />
       )}
+      <TextInput
+        placeholder="Notes"
+        value={notes}
+        onChangeText={setNotes}
+        style={styles.input}
+        multiline
+      />
       <Button title="Add Vaccination" onPress={handleAddVaccination} />
     </View>
   );
@@ -106,12 +124,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    justifyContent: "center",
   },
   picker: {
-    height: 50,
+    height: 150,
     width: "100%",
+    marginBottom: 30,
+  },
+  input: {
+    height: 40,
+    borderColor: "gray",
+    borderWidth: 1,
     marginBottom: 20,
+    paddingHorizontal: 10,
   },
 });
 
