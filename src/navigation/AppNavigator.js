@@ -1,6 +1,12 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
+import { faHouse } from "@fortawesome/free-solid-svg-icons/faHouse";
+import { faPaw } from "@fortawesome/free-solid-svg-icons/faPaw";
+import { faBookMedical } from "@fortawesome/free-solid-svg-icons/faBookMedical";
+import { faSyringe } from "@fortawesome/free-solid-svg-icons/faSyringe";
+
 import LoginScreen from "../screens/auth/LoginScreen";
 import SignUpScreen from "../screens/auth/SignUpScreen";
 import HomeScreen from "../screens/HomeScreen";
@@ -27,21 +33,45 @@ const Tab = createBottomTabNavigator();
 function HomeTabs() {
   return (
     <Tab.Navigator>
-      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{
+          tabBarLabel: "Home",
+          tabBarIcon: ({ color, size }) => (
+            <FontAwesomeIcon icon={faHouse} color={color} size={size} />
+          ),
+        }}
+      />
       <Tab.Screen
         name="PetList"
         component={PetListScreen}
-        options={{ title: "Your Pets" }}
-      />
-      <Tab.Screen
-        name="VaccinationSchedule"
-        component={VaccinationScheduleScreen}
-        options={{ title: "Vaccination Schedule" }}
+        options={{
+          tabBarLabel: "Your Pets",
+          tabBarIcon: ({ color, size }) => (
+            <FontAwesomeIcon icon={faPaw} color={color} size={size} />
+          ),
+        }}
       />
       <Tab.Screen
         name="HealthLogList"
         component={HealthLogListScreen}
-        options={{ title: "Health Logs" }}
+        options={{
+          tabBarLabel: "Health Logs",
+          tabBarIcon: ({ color, size }) => (
+            <FontAwesomeIcon icon={faBookMedical} color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="VaccinationSchedule"
+        component={VaccinationScheduleScreen}
+        options={{
+          tabBarLabel: "Vaccination Schedule",
+          tabBarIcon: ({ color, size }) => (
+            <FontAwesomeIcon icon={faSyringe} color={color} size={size} />
+          ),
+        }}
       />
     </Tab.Navigator>
   );
@@ -49,7 +79,7 @@ function HomeTabs() {
 
 function AppNavigator() {
   return (
-    <Stack.Navigator initialRouteName="Landing">
+    <Stack.Navigator initialRouteName="LandingPage">
       <Stack.Screen
         name="LandingPage"
         component={LandingPageScreen}
