@@ -8,6 +8,7 @@ import {
   Image,
   Alert,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 
@@ -42,7 +43,9 @@ const HealthLogListScreen = ({ navigation }) => {
   );
 
   if (isLoading) {
-    return <ActivityIndicator size="large" color="#0000ff" />;
+    return (
+      <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
+    );
   }
 
   return (
@@ -54,23 +57,26 @@ const HealthLogListScreen = ({ navigation }) => {
             source={require("../../../assets/health_log.png")}
             style={styles.image}
           />
-          <Text style={styles.logDetail}>
-            {log.log_date} - {log.details}
-          </Text>
-          <Button
-            title="View Details"
-            onPress={() =>
-              navigation.navigate("HealthLogDetails", { logId: log.id })
-            }
-          />
+          <View style={styles.logDetails}>
+            <Text style={styles.logDate}>{log.log_date}</Text>
+            <Text style={styles.logDetail}>{log.details}</Text>
+            <TouchableOpacity
+              style={styles.detailsButton}
+              onPress={() =>
+                navigation.navigate("HealthLogDetails", { logId: log.id })
+              }
+            >
+              <Text style={styles.detailsButtonText}>View Details</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       ))}
-      <View style={styles.addButtonContainer}>
-        <Button
-          title="Add New Health Log"
-          onPress={() => navigation.navigate("AddHealthLog")}
-        />
-      </View>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => navigation.navigate("AddHealthLog")}
+      >
+        <Text style={styles.addButtonText}>Add New Health Log</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -78,32 +84,76 @@ const HealthLogListScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
+    padding: 20,
+    backgroundColor: "#f0f0f0",
+  },
+  loader: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   title: {
-    fontSize: 22,
+    fontSize: 28,
     fontWeight: "bold",
-    marginVertical: 10,
+    marginBottom: 20,
+    textAlign: "center",
+    color: "#333",
   },
   logCard: {
-    padding: 20,
-    marginVertical: 5,
-    backgroundColor: "#f8f8f8",
-    borderRadius: 10,
+    flexDirection: "row",
     alignItems: "center",
+    padding: 15,
+    marginVertical: 10,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  logDetails: {
+    flex: 1,
+    marginLeft: 15,
+  },
+  logDate: {
+    fontSize: 16,
+    color: "#666",
+    marginBottom: 5,
   },
   logDetail: {
     fontSize: 18,
     fontWeight: "bold",
-  },
-  image: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    color: "#333",
     marginBottom: 10,
   },
-  addButtonContainer: {
-    marginTop: 20,
+  image: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+  },
+  detailsButton: {
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    backgroundColor: "#007bff",
+    borderRadius: 5,
+  },
+  detailsButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  addButton: {
+    marginTop: 30,
+    paddingVertical: 15,
+    backgroundColor: "#28a745",
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  addButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });
 

@@ -6,6 +6,7 @@ import {
   Image,
   StyleSheet,
   ScrollView,
+  TouchableOpacity,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 
@@ -37,28 +38,32 @@ const VaccinationScheduleScreen = ({ navigation }) => {
             source={require("../../../assets/vaccination.png")}
             style={styles.image}
           />
-          <Text style={styles.vaccinationDetail}>
-            {vaccination.vaccine_name} -{" "}
-            {new Date(vaccination.vaccination_date).toLocaleDateString()}
-          </Text>
-          <View style={styles.buttonContainer}>
-            <Button
-              title="View Details"
+          <View style={styles.vaccinationDetails}>
+            <Text style={styles.vaccinationName}>
+              {vaccination.vaccine_name}
+            </Text>
+            <Text style={styles.vaccinationDate}>
+              {new Date(vaccination.vaccination_date).toLocaleDateString()}
+            </Text>
+            <TouchableOpacity
+              style={styles.detailsButton}
               onPress={() =>
                 navigation.navigate("VaccinationDetails", {
                   vaccinationId: vaccination.id,
                 })
               }
-            />
+            >
+              <Text style={styles.detailsButtonText}>View Details</Text>
+            </TouchableOpacity>
           </View>
         </View>
       ))}
-      <View style={styles.addButtonContainer}>
-        <Button
-          title="Add New Vaccination"
-          onPress={() => navigation.navigate("AddVaccinationRecord")}
-        />
-      </View>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => navigation.navigate("AddVaccinationRecord")}
+      >
+        <Text style={styles.addButtonText}>Add New Vaccination</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -67,38 +72,70 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    backgroundColor: "#f0f0f0",
   },
   title: {
-    fontSize: 22,
+    fontSize: 28,
     fontWeight: "bold",
     marginBottom: 20,
+    textAlign: "center",
+    color: "#333",
   },
   vaccinationCard: {
-    backgroundColor: "#f8f8f8",
-    padding: 20,
-    marginVertical: 8,
-    borderRadius: 10,
-    alignItems: "center",
     flexDirection: "row",
-    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 15,
+    marginVertical: 10,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
   },
-  vaccinationDetail: {
+  vaccinationDetails: {
     flex: 1,
-    marginLeft: 20,
-    fontSize: 18,
+    marginLeft: 15,
+  },
+  vaccinationName: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  vaccinationDate: {
+    fontSize: 16,
+    color: "#666",
+    marginVertical: 5,
   },
   image: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 70,
+    height: 70,
+    borderRadius: 30,
   },
-  addButtonContainer: {
-    marginTop: 20,
+  detailsButton: {
+    marginTop: 10,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    backgroundColor: "#007bff",
+    borderRadius: 5,
   },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
+  detailsButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  addButton: {
+    marginTop: 30,
+    paddingVertical: 15,
+    backgroundColor: "#28a745",
+    borderRadius: 5,
     alignItems: "center",
+  },
+  addButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });
 

@@ -8,6 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Image,
+  TouchableOpacity,
 } from "react-native";
 
 const HomeScreen = ({ navigation }) => {
@@ -39,24 +40,65 @@ const HomeScreen = ({ navigation }) => {
   );
 
   if (isLoading) {
-    return <ActivityIndicator size="large" color="#0000ff" />;
+    return (
+      <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
+    );
   }
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Home</Text>
+      <Text style={styles.title}>Welcome to Pet Care App</Text>
+      <View style={styles.quickLinks}>
+        <TouchableOpacity
+          style={styles.linkCard}
+          onPress={() => navigation.navigate("PetList")}
+        >
+          <Image
+            source={require("../../assets/pet_icon.jpeg")}
+            style={styles.linkImage}
+          />
+          <Text style={styles.linkText}>Your Pets</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.linkCard}
+          onPress={() => navigation.navigate("HealthLogList")}
+        >
+          <Image
+            source={require("../../assets/health_log.png")}
+            style={styles.linkImage}
+          />
+          <Text style={styles.linkText}>Health Logs</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.linkCard}
+          onPress={() => navigation.navigate("VaccinationSchedule")}
+        >
+          <Image
+            source={require("../../assets/vaccination.png")}
+            style={styles.linkImage}
+          />
+          <Text style={styles.linkText}>Vaccination Schedule</Text>
+        </TouchableOpacity>
+      </View>
+      <Text style={styles.subtitle}>Your Pets</Text>
       {pets.map((pet) => (
         <View key={pet.id} style={styles.petCard}>
           <Image
             source={require("../../assets/pet_icon.jpeg")}
             style={styles.image}
           />
-          <Text style={styles.petName}>{pet.name}</Text>
-          <Text>{pet.type}</Text>
-          <Button
-            title="View Details"
-            onPress={() => navigation.navigate("PetDetails", { petId: pet.id })}
-          />
+          <View style={styles.petDetails}>
+            <Text style={styles.petName}>{pet.name}</Text>
+            <Text style={styles.petType}>{pet.type}</Text>
+            <TouchableOpacity
+              style={styles.detailsButton}
+              onPress={() =>
+                navigation.navigate("PetDetails", { petId: pet.id })
+              }
+            >
+              <Text style={styles.detailsButtonText}>View Details</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       ))}
     </ScrollView>
@@ -66,32 +108,97 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginVertical: 10,
-  },
-  petCard: {
     padding: 20,
-    marginVertical: 5,
-    backgroundColor: "#f8f8f8",
-    borderRadius: 10,
+    backgroundColor: "#f0f0f0",
+  },
+  loader: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
   },
-  petName: {
-    fontSize: 18,
+  title: {
+    fontSize: 28,
     fontWeight: "bold",
-    marginVertical: 5,
+    marginBottom: 20,
+    textAlign: "center",
+    color: "#333",
+  },
+  quickLinks: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 30,
+  },
+  linkCard: {
+    alignItems: "center",
+    padding: 10,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+    width: "30%",
+  },
+  linkImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginBottom: 10,
+  },
+  linkText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  subtitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 20,
+    color: "#333",
+  },
+  petCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 15,
+    marginVertical: 10,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  petDetails: {
+    flex: 1,
+    marginLeft: 15,
+  },
+  petName: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  petType: {
+    fontSize: 16,
+    color: "#666",
+    marginBottom: 10,
   },
   image: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
-  addButtonContainer: {
-    marginTop: 20,
+  detailsButton: {
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    backgroundColor: "#007bff",
+    borderRadius: 5,
+  },
+  detailsButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    textAlign: "center",
   },
 });
 

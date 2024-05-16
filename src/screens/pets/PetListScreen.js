@@ -8,6 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Image,
+  TouchableOpacity,
 } from "react-native";
 
 const PetListScreen = ({ navigation }) => {
@@ -39,7 +40,9 @@ const PetListScreen = ({ navigation }) => {
   );
 
   if (isLoading) {
-    return <ActivityIndicator size="large" color="#0000ff" />;
+    return (
+      <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
+    );
   }
 
   return (
@@ -51,20 +54,26 @@ const PetListScreen = ({ navigation }) => {
             source={require("../../../assets/pet_icon.jpeg")}
             style={styles.image}
           />
-          <Text style={styles.petName}>{pet.name}</Text>
-          <Text>{pet.type}</Text>
-          <Button
-            title="View Details"
-            onPress={() => navigation.navigate("PetDetails", { petId: pet.id })}
-          />
+          <View style={styles.petDetails}>
+            <Text style={styles.petName}>{pet.name}</Text>
+            <Text style={styles.petType}>{pet.type}</Text>
+            <TouchableOpacity
+              style={styles.detailsButton}
+              onPress={() =>
+                navigation.navigate("PetDetails", { petId: pet.id })
+              }
+            >
+              <Text style={styles.detailsButtonText}>View Details</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       ))}
-      <View style={styles.addButtonContainer}>
-        <Button
-          title="Add New Pet"
-          onPress={() => navigation.navigate("AddPet")}
-        />
-      </View>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => navigation.navigate("AddPet")}
+      >
+        <Text style={styles.addButtonText}>Add New Pet</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -72,32 +81,76 @@ const PetListScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
+    padding: 15,
+    backgroundColor: "#f0f0f0",
   },
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginVertical: 10,
-  },
-  petCard: {
-    padding: 20,
-    marginVertical: 5,
-    backgroundColor: "#f8f8f8",
-    borderRadius: 10,
+  loader: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
   },
-  petName: {
-    fontSize: 18,
+  title: {
+    fontSize: 28,
     fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+    color: "#333",
+  },
+  petCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 15,
+    marginVertical: 10,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  petDetails: {
+    flex: 1,
+    marginLeft: 15,
+  },
+  petName: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  petType: {
+    fontSize: 16,
+    color: "#666",
     marginVertical: 5,
   },
   image: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
-  addButtonContainer: {
-    marginTop: 20,
+  detailsButton: {
+    marginTop: 10,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    backgroundColor: "#007bff",
+    borderRadius: 5,
+  },
+  detailsButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  addButton: {
+    marginTop: 30,
+    paddingVertical: 15,
+    backgroundColor: "#28a745",
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  addButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });
 
