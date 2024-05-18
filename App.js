@@ -1,12 +1,16 @@
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import AppNavigator from "./src/navigation/AppNavigator";
-import "react-native-reanimated";
+import { SettingsProvider } from "./src/context/SettingsContext";
 
-export default function App() {
+const App = () => {
   return (
-    <NavigationContainer>
-      <AppNavigator />
-    </NavigationContainer>
+    <SettingsProvider>
+      <NavigationContainer>
+        <AppNavigator />
+      </NavigationContainer>
+    </SettingsProvider>
   );
-}
+};
+
+export default App;
