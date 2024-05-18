@@ -55,7 +55,6 @@ app.post("/register", async (req, res) => {
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   console.log("Login attempt for username:", username);
-  console.log("Login attempt for password:", password);
   try {
     const [results] = await connection.execute(
       "SELECT * FROM users WHERE username = ?",
