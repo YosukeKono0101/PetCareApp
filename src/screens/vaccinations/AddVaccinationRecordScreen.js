@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from "react";
 import {
   View,
-  Button,
   Text,
   StyleSheet,
   ScrollView,
   Alert,
-  Platform,
   TextInput,
+  TouchableOpacity,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import RNPickerSelect from "react-native-picker-select";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 const AddVaccinationRecordScreen = ({ navigation }) => {
@@ -70,36 +69,41 @@ const AddVaccinationRecordScreen = ({ navigation }) => {
 
   const onDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || vaccinationDate;
-    setShowDatePicker(Platform.OS === "ios");
+    setShowDatePicker(false);
     setVaccinationDate(currentDate);
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.header}>Add Vaccination Record</Text>
       {pets.length > 0 && (
-        <Picker
-          selectedValue={selectedPetId}
-          onValueChange={(itemValue) => setSelectedPetId(itemValue)}
-          style={styles.picker}
-        >
-          {pets.map((pet) => (
-            <Picker.Item label={pet.name} value={pet.id} key={pet.id} />
-          ))}
-        </Picker>
+        <RNPickerSelect
+          onValueChange={(value) => setSelectedPetId(value)}
+          items={pets.map((pet) => ({
+            label: pet.name,
+            value: pet.id,
+          }))}
+          placeholder={{ label: "Select a pet", value: null }}
+          style={pickerSelectStyles}
+        />
       )}
-      <Picker
-        selectedValue={vaccineName}
-        onValueChange={(itemValue) => setVaccineName(itemValue)}
-        style={styles.picker}
-      >
-        {vaccines.map((vaccine) => (
-          <Picker.Item key={vaccine} label={vaccine} value={vaccine} />
-        ))}
-      </Picker>
-      <Button
-        title="Choose Vaccination Date"
-        onPress={() => setShowDatePicker(true)}
+      <RNPickerSelect
+        onValueChange={(value) => setVaccineName(value)}
+        items={vaccines.map((vaccine) => ({
+          label: vaccine,
+          value: vaccine,
+        }))}
+        placeholder={{ label: "Select a vaccine", value: null }}
+        style={pickerSelectStyles}
       />
+      <TouchableOpacity
+        style={styles.dateButton}
+        onPress={() => setShowDatePicker(true)}
+      >
+        <Text style={styles.dateButtonText}>
+          Choose Vaccination Date: {vaccinationDate.toLocaleDateString()}
+        </Text>
+      </TouchableOpacity>
       {showDatePicker && (
         <DateTimePicker
           value={vaccinationDate}
@@ -115,8 +119,10 @@ const AddVaccinationRecordScreen = ({ navigation }) => {
         style={styles.input}
         multiline
       />
-      <Button title="Add Vaccination" onPress={handleAddVaccination} />
-    </View>
+      <TouchableOpacity style={styles.button} onPress={handleAddVaccination}>
+        <Text style={styles.buttonText}>Add Vaccination</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 };
 
@@ -124,18 +130,78 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    backgroundColor: "#f0f0f0",
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+    color: "#333",
   },
   picker: {
-    height: 150,
-    width: "100%",
     marginBottom: 30,
   },
-  input: {
-    height: 40,
-    borderColor: "gray",
-    borderWidth: 1,
+  dateButton: {
+    backgroundColor: "#007bff",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
     marginBottom: 20,
+  },
+  dateButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  input: {
+    height: 100,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    textAlignVertical: "top",
+    backgroundColor: "#fff",
+    marginBottom: 20,
+  },
+  button: {
+    backgroundColor: "#28a745",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+});
+
+const pickerSelectStyles = StyleSheet.create({
+  inputIOS: {
+    fontSize: 16,
+    paddingVertical: 12,
     paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: "gray",
+    borderRadius: 4,
+    color: "black",
+    paddingRight: 30,
+    marginBottom: 20,
+  },
+  inputAndroid: {
+    fontSize: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderWidth: 0.5,
+    borderColor: "gray",
+    borderRadius: 8,
+    color: "black",
+    paddingRight: 30,
+    marginBottom: 20,
+  },
+  placeholder: {
+    color: "gray",
   },
 });
 

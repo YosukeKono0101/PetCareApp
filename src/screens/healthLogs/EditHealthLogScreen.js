@@ -6,88 +6,95 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
+  Text,
+  TouchableOpacity,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
-const AddHealthLogScreen = ({ navigation }) => {
-  const [pets, setPets] = useState([]);
-  const [selectedPetId, setSelectedPetId] = useState(null);
+const EditHealthLogScreen = ({ route, navigation }) => {
+  const { logId } = route.params;
   const [logDate, setLogDate] = useState(new Date());
   const [details, setDetails] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   useEffect(() => {
-    const fetchPets = async () => {
+    const fetchLogDetails = async () => {
       try {
-        const response = await fetch("http://192.168.1.39:3000/pets");
+        const response = await fetch(
+          `http://192.168.1.39:3000/health-logs/${logId}`
+        );
         const json = await response.json();
-        setPets(json);
-        if (json.length > 0) {
-          setSelectedPetId(json[0].id);
+        if (response.ok) {
+          setLogDate(new Date(json.log_date));
+          setDetails(json.details);
+        } else {
+          Alert.alert(
+            "Error",
+            json.message || "Failed to fetch health log details"
+          );
         }
       } catch (error) {
-        Alert.alert("Error", "Failed to load pets");
+        Alert.alert(
+          "Error",
+          error.message || "Failed to fetch health log details"
+        );
       }
     };
-    fetchPets();
-  }, []);
 
-  const handleAddHealthLog = async () => {
-    if (!selectedPetId) {
-      Alert.alert("Error", "Please select a pet first.");
-      return;
-    }
+    fetchLogDetails();
+  }, [logId]);
+
+  const handleUpdateLog = async () => {
     try {
-      const response = await fetch("http://192.168.1.39:3000/health-logs", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          pet_id: selectedPetId,
-          log_date: logDate.toISOString(),
-          details,
-        }),
-      });
-      if (response.status === 200) {
-        Alert.alert("Success", "Health log added successfully", [
+      const response = await fetch(
+        `http://192.168.1.39:3000/health-logs/${logId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            log_date: logDate.toISOString(),
+            details,
+          }),
+        }
+      );
+      if (response.ok) {
+        Alert.alert("Success", "Health log updated successfully", [
           { text: "OK", onPress: () => navigation.goBack() },
         ]);
       } else {
         const json = await response.json();
-        Alert.alert("Error", json.message);
+        Alert.alert("Error", json.message || "Failed to update health log");
       }
     } catch (error) {
-      Alert.alert("Error", "An error occurred while adding the health log");
+      Alert.alert("Error", error.message || "Failed to update health log");
     }
+  };
+
+  const onDateChange = (event, selectedDate) => {
+    const currentDate = selectedDate || logDate;
+    setShowDatePicker(false);
+    setLogDate(currentDate);
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {pets.length > 0 && (
-        <Picker
-          selectedValue={selectedPetId}
-          onValueChange={(itemValue) => setSelectedPetId(itemValue)}
-          style={styles.picker}
-        >
-          {pets.map((pet) => (
-            <Picker.Item label={pet.name} value={pet.id} key={pet.id} />
-          ))}
-        </Picker>
-      )}
-      <Button title="Choose Log Date" onPress={() => setShowDatePicker(true)} />
+      <Text style={styles.title}>Edit Health Log</Text>
+      <TouchableOpacity
+        style={styles.dateButton}
+        onPress={() => setShowDatePicker(true)}
+      >
+        <Text style={styles.dateButtonText}>
+          Choose Log Date: {logDate.toLocaleDateString()}
+        </Text>
+      </TouchableOpacity>
       {showDatePicker && (
         <DateTimePicker
           value={logDate}
           mode="date"
           display="default"
-          onChange={(event, selectedDate) => {
-            setShowDatePicker(false);
-            if (selectedDate) {
-              setLogDate(selectedDate);
-            }
-          }}
+          onChange={onDateChange}
         />
       )}
       <TextInput
@@ -96,30 +103,61 @@ const AddHealthLogScreen = ({ navigation }) => {
         onChangeText={setDetails}
         style={styles.input}
         multiline
-        numberOfLines={4} // Makes it easier to type more text
       />
-      <Button title="Add Health Log" onPress={handleAddHealthLog} />
+      <TouchableOpacity style={styles.button} onPress={handleUpdateLog}>
+        <Text style={styles.buttonText}>Update Health Log</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flexGrow: 1,
     padding: 20,
     justifyContent: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "#f0f0f0",
   },
-  picker: {
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
     marginBottom: 20,
+    textAlign: "center",
+    color: "#333",
+  },
+  dateButton: {
+    backgroundColor: "#007bff",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  dateButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
   input: {
-    height: 100, // Increased height
-    borderColor: "gray",
+    height: 100,
+    borderColor: "#ccc",
     borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    textAlignVertical: "top",
+    backgroundColor: "#fff",
     marginBottom: 20,
-    paddingHorizontal: 10,
-    textAlignVertical: "top", // Proper align for multiline
+  },
+  button: {
+    backgroundColor: "#28a745",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });
 
-export default AddHealthLogScreen;
+export default EditHealthLogScreen;

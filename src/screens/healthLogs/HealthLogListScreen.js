@@ -1,3 +1,4 @@
+import { useFocusEffect } from "@react-navigation/native";
 import React, { useState, useCallback } from "react";
 import {
   View,
@@ -9,8 +10,8 @@ import {
   Alert,
   ActivityIndicator,
   TouchableOpacity,
+  SafeAreaView,
 } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
 
 const HealthLogListScreen = ({ navigation }) => {
   const [healthLogs, setHealthLogs] = useState([]);
@@ -49,41 +50,47 @@ const HealthLogListScreen = ({ navigation }) => {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Your Health Logs</Text>
-      {healthLogs.map((log) => (
-        <View key={log.id} style={styles.logCard}>
-          <Image
-            source={require("../../../assets/health_log.png")}
-            style={styles.image}
-          />
-          <View style={styles.logDetails}>
-            <Text style={styles.logDate}>{log.log_date}</Text>
-            <Text style={styles.logDetail}>{log.details}</Text>
-            <TouchableOpacity
-              style={styles.detailsButton}
-              onPress={() =>
-                navigation.navigate("HealthLogDetails", { logId: log.id })
-              }
-            >
-              <Text style={styles.detailsButtonText}>View Details</Text>
-            </TouchableOpacity>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Your Health Logs</Text>
+        {healthLogs.map((log) => (
+          <View key={log.id} style={styles.logCard}>
+            <Image
+              source={require("../../../assets/health_log.png")}
+              style={styles.image}
+            />
+            <View style={styles.logDetails}>
+              <Text style={styles.logDate}>{log.log_date}</Text>
+              <Text style={styles.logDetail}>{log.details}</Text>
+              <TouchableOpacity
+                style={styles.detailsButton}
+                onPress={() =>
+                  navigation.navigate("HealthLogDetails", { logId: log.id })
+                }
+              >
+                <Text style={styles.detailsButtonText}>View Details</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      ))}
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => navigation.navigate("AddHealthLog")}
-      >
-        <Text style={styles.addButtonText}>Add New Health Log</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        ))}
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => navigation.navigate("AddHealthLog")}
+        >
+          <Text style={styles.addButtonText}>Add New Health Log</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
+    backgroundColor: "#f0f0f0",
+  },
+  container: {
+    flexGrow: 1,
     padding: 20,
     backgroundColor: "#f0f0f0",
   },

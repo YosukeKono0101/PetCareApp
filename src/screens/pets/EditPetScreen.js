@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   TextInput,
-  Button,
-  StyleSheet,
   Alert,
+  StyleSheet,
   ScrollView,
+  Text,
+  TouchableOpacity,
+  Platform,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
@@ -18,6 +20,7 @@ const EditPetScreen = ({ route, navigation }) => {
   const [age, setAge] = useState("");
   const [weight, setWeight] = useState("");
   const [birthDate, setBirthDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   useEffect(() => {
     const fetchPetDetails = async () => {
@@ -74,31 +77,46 @@ const EditPetScreen = ({ route, navigation }) => {
     }
   };
 
+  const showDatePickerModal = () => {
+    setShowDatePicker(true);
+  };
+
+  const onDateChange = (event, selectedDate) => {
+    const currentDate = selectedDate || birthDate;
+    setShowDatePicker(Platform.OS === "ios");
+    setBirthDate(currentDate);
+  };
+
   return (
     <ScrollView style={styles.container}>
+      <Text style={styles.header}>Edit Pet Details</Text>
       <TextInput
         placeholder="Pet Name"
         value={name}
         onChangeText={setName}
         style={styles.input}
+        placeholderTextColor="#aaa"
       />
       <TextInput
         placeholder="Type (e.g., Dog, Cat)"
         value={type}
         onChangeText={setType}
         style={styles.input}
+        placeholderTextColor="#aaa"
       />
       <TextInput
         placeholder="Gender"
         value={gender}
         onChangeText={setGender}
         style={styles.input}
+        placeholderTextColor="#aaa"
       />
       <TextInput
         placeholder="Breed"
         value={breed}
         onChangeText={setBreed}
         style={styles.input}
+        placeholderTextColor="#aaa"
       />
       <TextInput
         placeholder="Age"
@@ -106,6 +124,7 @@ const EditPetScreen = ({ route, navigation }) => {
         onChangeText={setAge}
         style={styles.input}
         keyboardType="numeric"
+        placeholderTextColor="#aaa"
       />
       <TextInput
         placeholder="Weight (kg)"
@@ -113,16 +132,24 @@ const EditPetScreen = ({ route, navigation }) => {
         onChangeText={setWeight}
         style={styles.input}
         keyboardType="numeric"
+        placeholderTextColor="#aaa"
       />
-      <DateTimePicker
-        value={birthDate}
-        mode="date"
-        display="default"
-        onChange={(event, selectedDate) =>
-          setBirthDate(selectedDate || birthDate)
-        }
-      />
-      <Button title="Update Pet" onPress={handleUpdatePet} />
+      <TouchableOpacity onPress={showDatePickerModal} style={styles.dateButton}>
+        <Text style={styles.dateButtonText}>
+          Select Birth Date: {birthDate.toLocaleDateString()}
+        </Text>
+      </TouchableOpacity>
+      {showDatePicker && (
+        <DateTimePicker
+          value={birthDate}
+          mode="date"
+          display="default"
+          onChange={onDateChange}
+        />
+      )}
+      <TouchableOpacity style={styles.button} onPress={handleUpdatePet}>
+        <Text style={styles.buttonText}>Update Pet</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
@@ -131,13 +158,47 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+    backgroundColor: "#f0f0f0",
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+    color: "#333",
   },
   input: {
-    height: 40,
-    borderColor: "gray",
+    height: 50,
+    borderColor: "#ccc",
     borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 15,
     marginBottom: 20,
-    paddingHorizontal: 10,
+    backgroundColor: "#fff",
+  },
+  dateButton: {
+    padding: 15,
+    backgroundColor: "#007bff",
+    borderRadius: 10,
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  dateButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  button: {
+    padding: 15,
+    backgroundColor: "#28a745",
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 20,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });
 

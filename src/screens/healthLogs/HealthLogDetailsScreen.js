@@ -2,10 +2,10 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  Button,
   StyleSheet,
   Alert,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 
@@ -64,14 +64,23 @@ const HealthLogDetailsScreen = ({ route, navigation }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Health Log Details</Text>
-      <Text>Pet: {logDetails.pet_name}</Text>
-      <Text>Date: {new Date(logDetails.log_date).toLocaleDateString()}</Text>
-      <Text>Details: {logDetails.details}</Text>
-      <Button
-        title="Edit Log"
+      <Text style={styles.detailText}>Pet: {logDetails.pet_name}</Text>
+      <Text style={styles.detailText}>
+        Date: {new Date(logDetails.log_date).toLocaleDateString()}
+      </Text>
+      <Text style={styles.detailText}>Details: {logDetails.details}</Text>
+      <TouchableOpacity
+        style={styles.button}
         onPress={() => navigation.navigate("EditHealthLog", { logId })}
-      />
-      <Button title="Delete Log" onPress={handleDeleteLog} />
+      >
+        <Text style={styles.buttonText}>Edit Log</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.button, styles.deleteButton]}
+        onPress={handleDeleteLog}
+      >
+        <Text style={styles.buttonText}>Delete Log</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -82,11 +91,34 @@ const styles = StyleSheet.create({
     padding: 20,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#f0f0f0",
   },
   title: {
-    fontSize: 22,
+    fontSize: 28,
     fontWeight: "bold",
     marginBottom: 20,
+    color: "#333",
+  },
+  detailText: {
+    fontSize: 18,
+    color: "#333",
+    marginVertical: 5,
+  },
+  button: {
+    backgroundColor: "#007bff",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 20,
+    width: "80%",
+  },
+  deleteButton: {
+    backgroundColor: "#ff4444",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "bold",
   },
 });
 

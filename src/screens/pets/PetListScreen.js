@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Image,
   TouchableOpacity,
+  SafeAreaView,
 } from "react-native";
 
 const PetListScreen = ({ navigation }) => {
@@ -21,7 +22,7 @@ const PetListScreen = ({ navigation }) => {
         try {
           const response = await fetch("http://192.168.1.39:3000/pets");
           const json = await response.json();
-          console.log("Fetched pets:", json);
+          // console.log("Fetched pets:", json);
           if (Array.isArray(json)) {
             setPets(json);
           } else {
@@ -46,41 +47,47 @@ const PetListScreen = ({ navigation }) => {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Your Pets</Text>
-      {pets.map((pet) => (
-        <View key={pet.id} style={styles.petCard}>
-          <Image
-            source={require("../../../assets/pet_icon.jpeg")}
-            style={styles.image}
-          />
-          <View style={styles.petDetails}>
-            <Text style={styles.petName}>{pet.name}</Text>
-            <Text style={styles.petType}>{pet.type}</Text>
-            <TouchableOpacity
-              style={styles.detailsButton}
-              onPress={() =>
-                navigation.navigate("PetDetails", { petId: pet.id })
-              }
-            >
-              <Text style={styles.detailsButtonText}>View Details</Text>
-            </TouchableOpacity>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Your Pets</Text>
+        {pets.map((pet) => (
+          <View key={pet.id} style={styles.petCard}>
+            <Image
+              source={require("../../../assets/pet_icon.jpeg")}
+              style={styles.image}
+            />
+            <View style={styles.petDetails}>
+              <Text style={styles.petName}>{pet.name}</Text>
+              <Text style={styles.petType}>{pet.type}</Text>
+              <TouchableOpacity
+                style={styles.detailsButton}
+                onPress={() =>
+                  navigation.navigate("PetDetails", { petId: pet.id })
+                }
+              >
+                <Text style={styles.detailsButtonText}>View Details</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      ))}
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => navigation.navigate("AddPet")}
-      >
-        <Text style={styles.addButtonText}>Add New Pet</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        ))}
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => navigation.navigate("AddPet")}
+        >
+          <Text style={styles.addButtonText}>Add New Pet</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
+    backgroundColor: "#f0f0f0",
+  },
+  container: {
+    flexGrow: 1,
     padding: 15,
     backgroundColor: "#f0f0f0",
   },

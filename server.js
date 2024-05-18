@@ -1,6 +1,7 @@
 const express = require("express");
 const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const PORT = 3000;
 
@@ -23,6 +24,8 @@ connection.connect((err) => {
 
 const app = express();
 app.use(express.json());
+
+const SECRET_KEY = process.env.SECRET_KEY;
 
 /********************/
 /*    password      */
@@ -60,14 +63,15 @@ app.post("/login", async (req, res) => {
       "SELECT * FROM users WHERE username = ?",
       [username]
     );
-    console.log("User fetch results:", results);
     if (results.length === 0) {
       res.status(401).send({ status: "error", message: "User not found" });
     } else {
       const match = await bcrypt.compare(password, results[0].password);
-      console.log("Password comparison results:", match);
       if (match) {
-        res.send({ status: "success", message: "Login successfully" });
+        const token = jwt.sign({ userId: results[0].id }, SECRET_KEY, {
+          expiresIn: "1h",
+        });
+        res.send({ status: "success", message: "Login successfully", token });
       } else {
         res
           .status(401)
@@ -83,16 +87,34 @@ app.post("/login", async (req, res) => {
   }
 });
 
+// Middleware to verify JWT token
+const verifyToken = (req, res, next) => {
+  const token = req.headers["authorization"];
+  if (!token) {
+    return res
+      .status(403)
+      .send({ status: "error", message: "No token provided" });
+  }
+
+  jwt.verify(token, SECRET_KEY, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ status: "error", message: "Unauthorized" });
+    }
+    req.userId = decoded.userId;
+    next();
+  });
+};
+
 /********************/
 /*    Pets Info     */
 /********************/
 
 // add pet info to the database
-app.post("/pets", async (req, res) => {
+app.post("/pets", verifyToken, async (req, res) => {
   const { name, type, gender, breed, age, weight, birthDate } = req.body;
   const query = `
-    INSERT INTO pets (name, type, gender, breed, age, weight, birthDate)
-    VALUES (?, ?, ?, ?, ?, ?, ?)`;
+    INSERT INTO pets (name, type, gender, breed, age, weight, birthDate, user_id)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 
   try {
     const [results] = await connection.execute(query, [
@@ -103,6 +125,7 @@ app.post("/pets", async (req, res) => {
       parseInt(age, 10),
       parseFloat(weight),
       new Date(birthDate),
+      req.userId,
     ]);
     res.send({
       status: "success",
@@ -119,9 +142,12 @@ app.post("/pets", async (req, res) => {
 });
 
 // get pet info from the database
-app.get("/pets", async (req, res) => {
+app.get("/pets", verifyToken, async (req, res) => {
   try {
-    const [results] = await connection.execute("SELECT * FROM pets");
+    const [results] = await connection.execute(
+      "SELECT * FROM pets WHERE user_id = ?",
+      [req.userId]
+    );
     res.send(results);
   } catch (error) {
     res.status(500).send({
@@ -133,15 +159,15 @@ app.get("/pets", async (req, res) => {
 });
 
 // get pet details by if from the database
-app.get("/pets/:id", async (req, res) => {
+app.get("/pets/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
   const query = `
     SELECT name, type, gender, breed, age, weight, DATE_FORMAT(birthDate, '%Y-%m-%d') AS birthDate
     FROM pets
-    WHERE id = ?`;
+    WHERE id = ? AND user_id = ?`;
 
   try {
-    const [results] = await connection.execute(query, [id]);
+    const [results] = await connection.execute(query, [id, req.userId]);
     if (results.length === 0) {
       res.status(404).send({ status: "error", message: "Pet not found" });
     } else {
@@ -157,13 +183,13 @@ app.get("/pets/:id", async (req, res) => {
 });
 
 // update pet info by id from the database
-app.put("/pets/:id", async (req, res) => {
+app.put("/pets/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
   const { name, type, gender, breed, age, weight, birthDate } = req.body;
   const query = `
     UPDATE pets
     SET name = ?, type = ?, gender = ?, breed = ?, age = ?, weight = ?, birthDate = ?
-    WHERE id = ?`;
+    WHERE id = ? AND user_id = ?`;
 
   try {
     const [results] = await connection.execute(query, [
@@ -175,6 +201,7 @@ app.put("/pets/:id", async (req, res) => {
       parseFloat(weight),
       new Date(birthDate),
       id,
+      req.userId,
     ]);
     if (results.affectedRows === 0) {
       return res
@@ -192,11 +219,11 @@ app.put("/pets/:id", async (req, res) => {
 });
 
 // delete pet info from the database
-app.delete("/pets/:id", async (req, res) => {
+app.delete("/pets/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
-  const query = "DELETE FROM pets WHERE id = ?";
+  const query = "DELETE FROM pets WHERE id = ? AND user_id = ?";
   try {
-    const [results] = await connection.execute(query, [id]);
+    const [results] = await connection.execute(query, [id, req.userId]);
     if (results.affectedRows === 0) {
       return res
         .status(404)
@@ -217,14 +244,14 @@ app.delete("/pets/:id", async (req, res) => {
 /********************/
 
 // add health log to the database
-app.post("/health-logs", async (req, res) => {
+app.post("/health-logs", verifyToken, async (req, res) => {
   const { pet_id, log_date, details } = req.body;
   const query =
     "INSERT INTO health_logs (pet_id, log_date, details) VALUES (?, ?, ?)";
   try {
     const [results] = await connection.execute(query, [
       pet_id,
-      new Date(log_date), // Ensure date format
+      new Date(log_date),
       details,
     ]);
     res.send({
@@ -242,9 +269,12 @@ app.post("/health-logs", async (req, res) => {
 });
 
 // get health logs from the database
-app.get("/health-logs", async (req, res) => {
+app.get("/health-logs", verifyToken, async (req, res) => {
   try {
-    const [results] = await connection.execute("SELECT * FROM health_logs");
+    const [results] = await connection.execute(
+      "SELECT * FROM health_logs WHERE user_id = ?",
+      [req.userId]
+    );
     res.send(results);
   } catch (error) {
     res.status(500).send({
@@ -256,16 +286,16 @@ app.get("/health-logs", async (req, res) => {
 });
 
 // Get a specific health log by id from the database
-app.get("/health-logs/:id", async (req, res) => {
+app.get("/health-logs/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
   const query = `
     SELECT hl.id, hl.log_date, hl.details, p.name as pet_name
     FROM health_logs hl
     JOIN pets p ON hl.pet_id = p.id
-    WHERE hl.id = ?`;
+    WHERE hl.id = ? AND hl.user_id = ?`;
 
   try {
-    const [results] = await connection.execute(query, [id]);
+    const [results] = await connection.execute(query, [id, req.userId]);
     if (results.length > 0) {
       res.send(results[0]);
     } else {
@@ -283,13 +313,13 @@ app.get("/health-logs/:id", async (req, res) => {
 });
 
 // update health log by id from the database
-app.put("/health-logs/:id", async (req, res) => {
+app.put("/health-logs/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
   const { pet_id, log_date, details } = req.body;
   const query = `
     UPDATE health_logs
     SET pet_id = ?, log_date = ?, details = ?
-    WHERE id = ?`;
+    WHERE id = ? AND user_id = ?`;
 
   try {
     const [results] = await connection.execute(query, [
@@ -297,6 +327,7 @@ app.put("/health-logs/:id", async (req, res) => {
       log_date,
       details,
       id,
+      req.userId,
     ]);
     if (results.affectedRows === 0) {
       return res
@@ -314,11 +345,11 @@ app.put("/health-logs/:id", async (req, res) => {
 });
 
 // delete health log from the database
-app.delete("/health-logs/:id", async (req, res) => {
+app.delete("/health-logs/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
-  const query = "DELETE FROM health_logs WHERE id = ?";
+  const query = "DELETE FROM health_logs WHERE id = ? AND user_id = ?";
   try {
-    const [results] = await connection.execute(query, [id]);
+    const [results] = await connection.execute(query, [id, req.userId]);
     if (results.affectedRows === 0) {
       return res
         .status(404)
@@ -342,15 +373,16 @@ app.delete("/health-logs/:id", async (req, res) => {
 /********************/
 
 // add vaccination to the database
-app.post("/vaccination", async (req, res) => {
+app.post("/vaccination", verifyToken, async (req, res) => {
   const { pet_id, vaccine_name, vaccination_date } = req.body;
   const query =
-    "INSERT INTO vaccinations (pet_id, vaccine_name, vaccination_date) VALUES (?, ?, ?)";
+    "INSERT INTO vaccinations (pet_id, vaccine_name, vaccination_date, user_id) VALUES (?, ?, ?, ?)";
   try {
     const [results] = await connection.execute(query, [
       pet_id,
       vaccine_name,
       vaccination_date,
+      req.userId,
     ]);
     res.send({
       status: "success",
@@ -367,10 +399,10 @@ app.post("/vaccination", async (req, res) => {
 });
 
 // get vaccination from the database
-app.get("/vaccination", async (req, res) => {
-  const query = "SELECT * FROM vaccinations";
+app.get("/vaccination", verifyToken, async (req, res) => {
+  const query = "SELECT * FROM vaccinations WHERE user_id = ?";
   try {
-    const [results] = await connection.execute(query);
+    const [results] = await connection.execute(query, [req.userId]);
     res.send(results);
   } catch (error) {
     res.status(500).send({
@@ -382,12 +414,12 @@ app.get("/vaccination", async (req, res) => {
 });
 
 // get a specific vaccination by id from the database
-app.get("/vaccination/:id", async (req, res) => {
+app.get("/vaccination/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
-  const query = "SELECT * FROM vaccinations WHERE id = ?";
+  const query = "SELECT * FROM vaccinations WHERE id = ? AND user_id = ?";
 
   try {
-    const [results] = await connection.execute(query, [id]);
+    const [results] = await connection.execute(query, [id, req.userId]);
     if (results.length === 0) {
       return res.status(404).send({
         status: "error",
@@ -409,17 +441,18 @@ app.get("/vaccination/:id", async (req, res) => {
 });
 
 // update vaccination from the database
-app.put("/vaccination/:id", async (req, res) => {
+app.put("/vaccination/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
   const { pet_id, vaccine_name, vaccination_date } = req.body;
   const query =
-    "UPDATE vaccinations SET pet_id = ?, vaccine_name = ?, vaccination_date = ? WHERE id = ?";
+    "UPDATE vaccinations SET pet_id = ?, vaccine_name = ?, vaccination_date = ? WHERE id = ? AND user_id = ?";
   try {
     const [results] = await connection.execute(query, [
       pet_id,
       vaccine_name,
       vaccination_date,
       id,
+      req.userId,
     ]);
     if (results.affectedRows === 0) {
       return res
@@ -440,11 +473,11 @@ app.put("/vaccination/:id", async (req, res) => {
 });
 
 // delete vaccination from the database
-app.delete("/vaccination/:id", async (req, res) => {
+app.delete("/vaccination/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
-  const query = "DELETE FROM vaccinations WHERE id = ?";
+  const query = "DELETE FROM vaccinations WHERE id = ? AND user_id = ?";
   try {
-    const [results] = await connection.execute(query, [id]);
+    const [results] = await connection.execute(query, [id, req.userId]);
     if (results.affectedRows === 0) {
       return res
         .status(404)

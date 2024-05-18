@@ -6,8 +6,10 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
+  Text,
+  TouchableOpacity,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import RNPickerSelect from "react-native-picker-select";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 const AddHealthLogScreen = ({ navigation }) => {
@@ -65,18 +67,26 @@ const AddHealthLogScreen = ({ navigation }) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.header}>Add Health Log</Text>
       {pets.length > 0 && (
-        <Picker
-          selectedValue={selectedPetId}
-          onValueChange={(itemValue) => setSelectedPetId(itemValue)}
-          style={styles.picker}
-        >
-          {pets.map((pet) => (
-            <Picker.Item label={pet.name} value={pet.id} key={pet.id} />
-          ))}
-        </Picker>
+        <RNPickerSelect
+          onValueChange={(value) => setSelectedPetId(value)}
+          items={pets.map((pet) => ({
+            label: pet.name,
+            value: pet.id,
+          }))}
+          placeholder={{ label: "Select a pet", value: null }}
+          style={pickerSelectStyles}
+        />
       )}
-      <Button title="Choose Log Date" onPress={() => setShowDatePicker(true)} />
+      <TouchableOpacity
+        style={styles.dateButton}
+        onPress={() => setShowDatePicker(true)}
+      >
+        <Text style={styles.dateButtonText}>
+          Choose Log Date: {logDate.toLocaleDateString()}
+        </Text>
+      </TouchableOpacity>
       {showDatePicker && (
         <DateTimePicker
           value={logDate}
@@ -98,27 +108,90 @@ const AddHealthLogScreen = ({ navigation }) => {
         multiline
         numberOfLines={4} // Makes it easier to type more text
       />
-      <Button title="Add Health Log" onPress={handleAddHealthLog} />
+      <TouchableOpacity style={styles.button} onPress={handleAddHealthLog}>
+        <Text style={styles.buttonText}>Add Health Log</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     padding: 20,
     justifyContent: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "#f0f0f0",
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+    color: "#333",
   },
   picker: {
     marginBottom: 20,
   },
-  input: {
-    height: 100, // Increased height
-    borderColor: "gray",
-    borderWidth: 1,
+  dateButton: {
+    backgroundColor: "#007bff",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
     marginBottom: 20,
+  },
+  dateButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  input: {
+    height: 100,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    textAlignVertical: "top",
+    backgroundColor: "#fff",
+    marginBottom: 20,
+  },
+  button: {
+    backgroundColor: "#28a745",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+});
+
+const pickerSelectStyles = StyleSheet.create({
+  inputIOS: {
+    fontSize: 16,
+    paddingVertical: 12,
     paddingHorizontal: 10,
-    textAlignVertical: "top", // Proper align for multiline
+    borderWidth: 1,
+    borderColor: "gray",
+    borderRadius: 4,
+    color: "black",
+    paddingRight: 30,
+    marginBottom: 20,
+  },
+  inputAndroid: {
+    fontSize: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderWidth: 0.5,
+    borderColor: "gray",
+    borderRadius: 8,
+    color: "black",
+    paddingRight: 30,
+    marginBottom: 20,
+  },
+  placeholder: {
+    color: "gray",
   },
 });
 

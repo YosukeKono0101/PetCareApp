@@ -9,7 +9,9 @@ import {
   ActivityIndicator,
   Image,
   TouchableOpacity,
+  SafeAreaView,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const HomeScreen = ({ navigation }) => {
   const [pets, setPets] = useState([]);
@@ -19,9 +21,13 @@ const HomeScreen = ({ navigation }) => {
     React.useCallback(() => {
       const fetchPets = async () => {
         try {
-          const response = await fetch("http://192.168.1.39:3000/pets");
+          const token = await AsyncStorage.getItem("token");
+          const response = await fetch("http://192.168.1.39:3000/pets", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
           const json = await response.json();
-          console.log("Fetched pets:", json);
           if (Array.isArray(json)) {
             setPets(json);
           } else {
@@ -39,6 +45,11 @@ const HomeScreen = ({ navigation }) => {
     }, [])
   );
 
+  const handleLogout = async () => {
+    await AsyncStorage.removeItem("token");
+    navigation.navigate("Login");
+  };
+
   if (isLoading) {
     return (
       <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
@@ -46,68 +57,77 @@ const HomeScreen = ({ navigation }) => {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Welcome to Pet Care App</Text>
-      <View style={styles.quickLinks}>
-        <TouchableOpacity
-          style={styles.linkCard}
-          onPress={() => navigation.navigate("PetList")}
-        >
-          <Image
-            source={require("../../assets/pet_icon.jpeg")}
-            style={styles.linkImage}
-          />
-          <Text style={styles.linkText}>Your Pets</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.linkCard}
-          onPress={() => navigation.navigate("HealthLogList")}
-        >
-          <Image
-            source={require("../../assets/health_log.png")}
-            style={styles.linkImage}
-          />
-          <Text style={styles.linkText}>Health Logs</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.linkCard}
-          onPress={() => navigation.navigate("VaccinationSchedule")}
-        >
-          <Image
-            source={require("../../assets/vaccination.png")}
-            style={styles.linkImage}
-          />
-          <Text style={styles.linkText}>Vaccination Schedule</Text>
-        </TouchableOpacity>
-      </View>
-      <Text style={styles.subtitle}>Your Pets</Text>
-      {pets.map((pet) => (
-        <View key={pet.id} style={styles.petCard}>
-          <Image
-            source={require("../../assets/pet_icon.jpeg")}
-            style={styles.image}
-          />
-          <View style={styles.petDetails}>
-            <Text style={styles.petName}>{pet.name}</Text>
-            <Text style={styles.petType}>{pet.type}</Text>
-            <TouchableOpacity
-              style={styles.detailsButton}
-              onPress={() =>
-                navigation.navigate("PetDetails", { petId: pet.id })
-              }
-            >
-              <Text style={styles.detailsButtonText}>View Details</Text>
-            </TouchableOpacity>
-          </View>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Welcome to Pet Care App</Text>
+        <View style={styles.quickLinks}>
+          <TouchableOpacity
+            style={styles.linkCard}
+            onPress={() => navigation.navigate("PetList")}
+          >
+            <Image
+              source={require("../../assets/pet_icon.jpeg")}
+              style={styles.linkImage}
+            />
+            <Text style={styles.linkText}>Your Pets</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.linkCard}
+            onPress={() => navigation.navigate("HealthLogList")}
+          >
+            <Image
+              source={require("../../assets/health_log.png")}
+              style={styles.linkImage}
+            />
+            <Text style={styles.linkText}>Health Logs</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.linkCard}
+            onPress={() => navigation.navigate("VaccinationSchedule")}
+          >
+            <Image
+              source={require("../../assets/vaccination.png")}
+              style={styles.linkImage}
+            />
+            <Text style={styles.linkText}>Vaccination Schedule</Text>
+          </TouchableOpacity>
         </View>
-      ))}
-    </ScrollView>
+        <Text style={styles.subtitle}>Your Pets</Text>
+        {pets.map((pet) => (
+          <View key={pet.id} style={styles.petCard}>
+            <Image
+              source={require("../../assets/pet_icon.jpeg")}
+              style={styles.image}
+            />
+            <View style={styles.petDetails}>
+              <Text style={styles.petName}>{pet.name}</Text>
+              <Text style={styles.petType}>{pet.type}</Text>
+              <TouchableOpacity
+                style={styles.detailsButton}
+                onPress={() =>
+                  navigation.navigate("PetDetails", { petId: pet.id })
+                }
+              >
+                <Text style={styles.detailsButtonText}>View Details</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ))}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutButtonText}>Logout</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
+    backgroundColor: "#f0f0f0",
+  },
+  container: {
+    flexGrow: 1,
     padding: 20,
     backgroundColor: "#f0f0f0",
   },
@@ -199,6 +219,19 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     textAlign: "center",
+  },
+  logoutButton: {
+    backgroundColor: "#dc3545",
+    padding: 15,
+    borderRadius: 25,
+    alignItems: "center",
+    marginTop: 30,
+    width: "100%",
+  },
+  logoutButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });
 

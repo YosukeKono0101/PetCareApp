@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  Button,
   Image,
   StyleSheet,
   Alert,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 
@@ -63,7 +63,9 @@ const PetDetailsScreen = ({ route, navigation }) => {
   };
 
   if (!petDetails) {
-    return <ActivityIndicator size="large" color="#0000ff" />;
+    return (
+      <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
+    );
   }
 
   return (
@@ -73,17 +75,21 @@ const PetDetailsScreen = ({ route, navigation }) => {
         style={styles.image}
       />
       <Text style={styles.title}>{petDetails.name}</Text>
-      <Text>Type: {petDetails.type}</Text>
-      <Text>Gender: {petDetails.gender}</Text>
-      <Text>Breed: {petDetails.breed}</Text>
-      <Text>Age: {petDetails.age}</Text>
-      <Text>Weight: {petDetails.weight}</Text>
-      <Text>Birth Date: {petDetails.birthDate}</Text>
-      <Button
-        title="Edit"
+      <Text style={styles.detailText}>Type: {petDetails.type}</Text>
+      <Text style={styles.detailText}>Gender: {petDetails.gender}</Text>
+      <Text style={styles.detailText}>Breed: {petDetails.breed}</Text>
+      <Text style={styles.detailText}>Age: {petDetails.age}</Text>
+      <Text style={styles.detailText}>Weight: {petDetails.weight}</Text>
+      <Text style={styles.detailText}>Birth Date: {petDetails.birthDate}</Text>
+      <TouchableOpacity
+        style={styles.editButton}
         onPress={() => navigation.navigate("EditPet", { petId })}
-      />
-      <Button title="Delete" onPress={handleDeletePet} />
+      >
+        <Text style={styles.buttonText}>Edit</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.deleteButton} onPress={handleDeletePet}>
+        <Text style={styles.buttonText}>Delete</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -93,17 +99,52 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     alignItems: "center",
+    backgroundColor: "#f0f0f0",
+  },
+  loader: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   image: {
     width: 200,
     height: 200,
     borderRadius: 100,
     marginBottom: 20,
+    borderWidth: 2,
+    borderColor: "#ddd",
   },
   title: {
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: "bold",
     marginBottom: 10,
+    color: "#333",
+  },
+  detailText: {
+    fontSize: 18,
+    marginBottom: 5,
+    color: "#555",
+  },
+  editButton: {
+    backgroundColor: "#007bff",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 20,
+    width: "80%",
+  },
+  deleteButton: {
+    backgroundColor: "#dc3545",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 10,
+    width: "80%",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "bold",
   },
 });
 

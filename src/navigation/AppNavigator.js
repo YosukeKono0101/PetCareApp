@@ -6,26 +6,32 @@ import { faHouse } from "@fortawesome/free-solid-svg-icons/faHouse";
 import { faPaw } from "@fortawesome/free-solid-svg-icons/faPaw";
 import { faBookMedical } from "@fortawesome/free-solid-svg-icons/faBookMedical";
 import { faSyringe } from "@fortawesome/free-solid-svg-icons/faSyringe";
+import { faCog } from "@fortawesome/free-solid-svg-icons/faCog";
 
 import LoginScreen from "../screens/auth/LoginScreen";
 import SignUpScreen from "../screens/auth/SignUpScreen";
 import HomeScreen from "../screens/HomeScreen";
-// pet
+import LandingPageScreen from "../screens/LandingPageScreen";
+
+// Pet
 import PetDetailsScreen from "../screens/pets/PetDetailsScreen";
 import PetListScreen from "../screens/pets/PetListScreen";
 import AddPetScreen from "../screens/pets/AddPetScreen";
 import EditPetScreen from "../screens/pets/EditPetScreen";
-// health log
+// Health Log
 import HealthLogDetailsScreen from "../screens/healthLogs/HealthLogDetailsScreen";
 import HealthLogListScreen from "../screens/healthLogs/HealthLogListScreen";
 import AddHealthLogScreen from "../screens/healthLogs/AddHealthLogScreen";
 import EditHealthLogScreen from "../screens/healthLogs/EditHealthLogScreen";
-// vaccination
+// Vaccination
 import VaccinationScheduleScreen from "../screens/vaccinations/VaccinationScheduleScreen";
 import VaccinationDetailsScreen from "../screens/vaccinations/VaccinationDetailsScreen";
 import AddVaccinationRecordScreen from "../screens/vaccinations/AddVaccinationRecordScreen";
 import EditVaccinationRecordScreen from "../screens/vaccinations/EditVaccinationRecordScreen";
-import LandingPageScreen from "../screens/LandingPageScreen";
+
+// Settings
+import SettingsScreen from "../screens/settings/SettingsScreen";
+import AboutScreen from "../screens/about/AboutScreen";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -38,6 +44,7 @@ function HomeTabs() {
         component={HomeScreen}
         options={{
           tabBarLabel: "Home",
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <FontAwesomeIcon icon={faHouse} color={color} size={size} />
           ),
@@ -48,6 +55,7 @@ function HomeTabs() {
         component={PetListScreen}
         options={{
           tabBarLabel: "Your Pets",
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <FontAwesomeIcon icon={faPaw} color={color} size={size} />
           ),
@@ -58,6 +66,7 @@ function HomeTabs() {
         component={HealthLogListScreen}
         options={{
           tabBarLabel: "Health Logs",
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <FontAwesomeIcon icon={faBookMedical} color={color} size={size} />
           ),
@@ -67,9 +76,21 @@ function HomeTabs() {
         name="VaccinationSchedule"
         component={VaccinationScheduleScreen}
         options={{
-          tabBarLabel: "Vaccination Schedule",
+          tabBarLabel: "Vaccines",
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <FontAwesomeIcon icon={faSyringe} color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          tabBarLabel: "Settings",
+          headerShown: false,
+          tabBarIcon: ({ color, size }) => (
+            <FontAwesomeIcon icon={faCog} color={color} size={size} />
           ),
         }}
       />
@@ -83,22 +104,22 @@ function AppNavigator() {
       <Stack.Screen
         name="LandingPage"
         component={LandingPageScreen}
-        options={{ title: "Welcome" }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="Login"
         component={LoginScreen}
-        options={{ title: "Login" }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="SignUp"
         component={SignUpScreen}
-        options={{ title: "Sign Up" }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="HomeTabs"
         component={HomeTabs}
-        options={{ title: "Home", headerShown: false }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="PetDetails"
@@ -144,6 +165,11 @@ function AppNavigator() {
         name="EditVaccinationRecord"
         component={EditVaccinationRecordScreen}
         options={{ title: "Edit Vaccination Record" }}
+      />
+      <Stack.Screen
+        name="About"
+        component={AboutScreen}
+        options={{ title: "About" }}
       />
     </Stack.Navigator>
   );

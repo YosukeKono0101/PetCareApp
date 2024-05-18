@@ -2,11 +2,11 @@ import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
-  Button,
   Image,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  SafeAreaView,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 
@@ -30,47 +30,53 @@ const VaccinationScheduleScreen = ({ navigation }) => {
   );
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Vaccination Schedule</Text>
-      {vaccinations.map((vaccination) => (
-        <View key={vaccination.id} style={styles.vaccinationCard}>
-          <Image
-            source={require("../../../assets/vaccination.png")}
-            style={styles.image}
-          />
-          <View style={styles.vaccinationDetails}>
-            <Text style={styles.vaccinationName}>
-              {vaccination.vaccine_name}
-            </Text>
-            <Text style={styles.vaccinationDate}>
-              {new Date(vaccination.vaccination_date).toLocaleDateString()}
-            </Text>
-            <TouchableOpacity
-              style={styles.detailsButton}
-              onPress={() =>
-                navigation.navigate("VaccinationDetails", {
-                  vaccinationId: vaccination.id,
-                })
-              }
-            >
-              <Text style={styles.detailsButtonText}>View Details</Text>
-            </TouchableOpacity>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Vaccination Schedule</Text>
+        {vaccinations.map((vaccination) => (
+          <View key={vaccination.id} style={styles.vaccinationCard}>
+            <Image
+              source={require("../../../assets/vaccination.png")}
+              style={styles.image}
+            />
+            <View style={styles.vaccinationDetails}>
+              <Text style={styles.vaccinationName}>
+                {vaccination.vaccine_name}
+              </Text>
+              <Text style={styles.vaccinationDate}>
+                {new Date(vaccination.vaccination_date).toLocaleDateString()}
+              </Text>
+              <TouchableOpacity
+                style={styles.detailsButton}
+                onPress={() =>
+                  navigation.navigate("VaccinationDetails", {
+                    vaccinationId: vaccination.id,
+                  })
+                }
+              >
+                <Text style={styles.detailsButtonText}>View Details</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      ))}
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => navigation.navigate("AddVaccinationRecord")}
-      >
-        <Text style={styles.addButtonText}>Add New Vaccination</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        ))}
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => navigation.navigate("AddVaccinationRecord")}
+        >
+          <Text style={styles.addButtonText}>Add New Vaccination</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
+    backgroundColor: "#f0f0f0",
+  },
+  container: {
+    flexGrow: 1,
     padding: 20,
     backgroundColor: "#f0f0f0",
   },
