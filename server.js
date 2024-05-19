@@ -40,10 +40,17 @@ app.post("/register", async (req, res) => {
       "INSERT INTO users (username, password) VALUES (?, ?)",
       [username, hashedPassword]
     );
+
+    // Create JWT token
+    const token = jwt.sign({ userId: results.insertId }, SECRET_KEY, {
+      expiresIn: "1h",
+    });
+
     res.send({
       status: "success",
       message: "User registered successfully",
       userId: results.insertId,
+      token,
     });
   } catch (error) {
     res.status(500).send({
@@ -89,7 +96,14 @@ app.post("/login", async (req, res) => {
 
 // Middleware to verify JWT token
 const verifyToken = (req, res, next) => {
-  const token = req.headers["authorization"];
+  const authHeader = req.headers["authorization"];
+  if (!authHeader) {
+    return res
+      .status(403)
+      .send({ status: "error", message: "No token provided" });
+  }
+
+  const token = authHeader.split(" ")[1];
   if (!token) {
     return res
       .status(403)
@@ -247,10 +261,11 @@ app.delete("/pets/:id", verifyToken, async (req, res) => {
 app.post("/health-logs", verifyToken, async (req, res) => {
   const { pet_id, log_date, details } = req.body;
   const query =
-    "INSERT INTO health_logs (pet_id, log_date, details) VALUES (?, ?, ?)";
+    "INSERT INTO health_logs (pet_id, user_id, log_date, details) VALUES (?, ?, ?, ?)";
   try {
     const [results] = await connection.execute(query, [
       pet_id,
+      req.userId,
       new Date(log_date),
       details,
     ]);
