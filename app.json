@@ -7,7 +7,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash_image.jpeg",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -15,7 +15,7 @@
     "ios": {
       "supportsTablet": true,
       "splash": {
-        "image": "./assets/splash_image.jpeg",
+        "image": "./assets/splash.png",
         "resizeMode": "contain",
         "backgroundColor": "#ffffff"
       }
@@ -26,7 +26,7 @@
         "backgroundColor": "#ffffff"
       },
       "splash": {
-        "image": "./assets/splash_image.jpeg",
+        "image": "./assets/splash.png",
         "resizeMode": "contain",
         "backgroundColor": "#ffffff"
       }
@@ -34,7 +34,7 @@
     "web": {
       "favicon": "./assets/favicon.png",
       "splash": {
-        "image": "./assets/splash_image.jpeg",
+        "image": "./assets/splash.png",
         "resizeMode": "contain",
         "backgroundColor": "#ffffff"
       }
