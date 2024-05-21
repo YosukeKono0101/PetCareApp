@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { FontAwesomeIcon } from "@fortawesome/react-native-fontawesome";
@@ -7,6 +7,7 @@ import { faPaw } from "@fortawesome/free-solid-svg-icons/faPaw";
 import { faBookMedical } from "@fortawesome/free-solid-svg-icons/faBookMedical";
 import { faSyringe } from "@fortawesome/free-solid-svg-icons/faSyringe";
 import { faCog } from "@fortawesome/free-solid-svg-icons/faCog";
+import { SettingsContext } from "../context/SettingsContext";
 
 import LoginScreen from "../screens/auth/LoginScreen";
 import SignUpScreen from "../screens/auth/SignUpScreen";
@@ -37,8 +38,23 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function HomeTabs() {
+  const { theme } = useContext(SettingsContext);
+  const isDarkTheme = theme === "dark";
+
   return (
-    <Tab.Navigator>
+    <Tab.Navigator
+      screenOptions={{
+        tabBarStyle: {
+          backgroundColor: isDarkTheme ? "black" : "#fff",
+        },
+        tabBarLabelStyle: {
+          color: isDarkTheme ? "#fff" : "black",
+        },
+        tabBarIconStyle: {
+          color: isDarkTheme ? "#fff" : "bla",
+        },
+      }}
+    >
       <Tab.Screen
         name="Home"
         component={HomeScreen}
@@ -99,8 +115,18 @@ function HomeTabs() {
 }
 
 function AppNavigator() {
+  const { theme } = useContext(SettingsContext);
+  const isDarkTheme = theme === "dark";
   return (
-    <Stack.Navigator initialRouteName="LandingPage">
+    <Stack.Navigator
+      initialRouteName="LandingPage"
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: isDarkTheme ? "#000" : "#fff",
+        },
+        headerTintColor: isDarkTheme ? "#fff" : "#000",
+      }}
+    >
       <Stack.Screen
         name="LandingPage"
         component={LandingPageScreen}

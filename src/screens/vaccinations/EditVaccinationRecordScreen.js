@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   View,
   TextInput,
@@ -9,18 +9,29 @@ import {
   Text,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SettingsContext } from "../../context/SettingsContext";
 
 const EditVaccinationRecordScreen = ({ route, navigation }) => {
   const { vaccinationId } = route.params;
+  const { fontSize, theme } = useContext(SettingsContext);
   const [vaccineName, setVaccineName] = useState("");
   const [vaccinationDate, setVaccinationDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
+  const isDarkTheme = theme === "dark";
+
   useEffect(() => {
     const fetchVaccinationDetails = async () => {
       try {
+        const token = await AsyncStorage.getItem("token");
         const response = await fetch(
-          `http://192.168.1.39:3000/vaccination/${vaccinationId}`
+          `http://192.168.1.39:3000/vaccination/${vaccinationId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         const json = await response.json();
         setVaccineName(json.data.vaccine_name);
@@ -35,12 +46,14 @@ const EditVaccinationRecordScreen = ({ route, navigation }) => {
 
   const handleUpdateVaccination = async () => {
     try {
+      const token = await AsyncStorage.getItem("token");
       const response = await fetch(
         `http://192.168.1.39:3000/vaccination/${vaccinationId}`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             vaccine_name: vaccineName,
@@ -68,19 +81,23 @@ const EditVaccinationRecordScreen = ({ route, navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Edit Vaccination Record</Text>
+    <View style={[styles.container, isDarkTheme && styles.darkContainer]}>
+      <Text
+        style={[styles.title, { fontSize }, isDarkTheme && styles.darkText]}
+      >
+        Edit Vaccination Record
+      </Text>
       <TextInput
         placeholder="Vaccine Name"
         value={vaccineName}
         onChangeText={setVaccineName}
-        style={styles.input}
+        style={[styles.input, { fontSize }]}
       />
       <TouchableOpacity
         style={styles.dateButton}
         onPress={() => setShowDatePicker(true)}
       >
-        <Text style={styles.dateButtonText}>
+        <Text style={[styles.dateButtonText, { fontSize }]}>
           Select Vaccination Date: {vaccinationDate.toLocaleDateString()}
         </Text>
       </TouchableOpacity>
@@ -106,12 +123,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#f0f0f0",
   },
+  darkContainer: {
+    backgroundColor: "#333",
+  },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
     textAlign: "center",
     color: "#333",
+  },
+  darkText: {
+    color: "#fff",
   },
   input: {
     height: 50,

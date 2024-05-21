@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useContext } from "react";
 import {
   View,
   Text,
@@ -9,15 +9,25 @@ import {
   SafeAreaView,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SettingsContext } from "../../context/SettingsContext";
 
 const VaccinationScheduleScreen = ({ navigation }) => {
+  const { fontSize, theme } = useContext(SettingsContext);
   const [vaccinations, setVaccinations] = useState([]);
+
+  const isDarkTheme = theme === "dark";
 
   useFocusEffect(
     useCallback(() => {
       const fetchVaccinations = async () => {
         try {
-          const response = await fetch("http://192.168.1.39:3000/vaccination");
+          const token = await AsyncStorage.getItem("token");
+          const response = await fetch("http://192.168.1.39:3000/vaccination", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
           const json = await response.json();
           setVaccinations(json);
         } catch (error) {
@@ -30,41 +40,113 @@ const VaccinationScheduleScreen = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Vaccination Schedule</Text>
-        {vaccinations.map((vaccination) => (
-          <View key={vaccination.id} style={styles.vaccinationCard}>
-            <Image
-              source={require("../../../assets/vaccination.png")}
-              style={styles.image}
-            />
-            <View style={styles.vaccinationDetails}>
-              <Text style={styles.vaccinationName}>
-                {vaccination.vaccine_name}
-              </Text>
-              <Text style={styles.vaccinationDate}>
-                {new Date(vaccination.vaccination_date).toLocaleDateString()}
-              </Text>
-              <TouchableOpacity
-                style={styles.detailsButton}
-                onPress={() =>
-                  navigation.navigate("VaccinationDetails", {
-                    vaccinationId: vaccination.id,
-                  })
-                }
-              >
-                <Text style={styles.detailsButtonText}>View Details</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => navigation.navigate("AddVaccinationRecord")}
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        isDarkTheme ? styles.darkSafeArea : styles.lightSafeArea,
+      ]}
+    >
+      <ScrollView
+        contentContainerStyle={[
+          styles.container,
+          isDarkTheme ? styles.darkContainer : styles.lightContainer,
+        ]}
+      >
+        <Text
+          style={[
+            styles.title,
+            { fontSize },
+            isDarkTheme ? styles.darkText : styles.lightText,
+          ]}
         >
-          <Text style={styles.addButtonText}>Add New Vaccination</Text>
-        </TouchableOpacity>
+          Vaccination Schedule
+        </Text>
+        {vaccinations.length === 0 ? (
+          <View style={styles.noLogsContainer}>
+            <Image
+              source={
+                isDarkTheme
+                  ? require("../../../assets/vaccine_logo_dark.png")
+                  : require("../../../assets/vaccine_logo_white.png")
+              }
+              style={styles.noLogsImage}
+            />
+            <Text
+              style={[
+                styles.noLogsText,
+                { fontSize },
+                isDarkTheme ? styles.darkText : styles.lightText,
+              ]}
+            >
+              You have not added any vaccination logs yet.
+            </Text>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => navigation.navigate("AddVaccinationRecord")}
+            >
+              <Text style={styles.addButtonText}>
+                Add Your First Vaccination
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          vaccinations.map((vaccination) => (
+            <View
+              key={vaccination.id}
+              style={[
+                styles.vaccinationCard,
+                isDarkTheme ? styles.darkCard : styles.lightCard,
+              ]}
+            >
+              <Image
+                source={
+                  isDarkTheme
+                    ? require("../../../assets/vaccine_dark.png")
+                    : require("../../../assets/vaccine_white.png")
+                }
+                style={styles.image}
+              />
+              <View style={styles.vaccinationDetails}>
+                <Text
+                  style={[
+                    styles.vaccinationName,
+                    { fontSize },
+                    isDarkTheme ? styles.darkText : styles.lightText,
+                  ]}
+                >
+                  {vaccination.vaccine_name}
+                </Text>
+                <Text
+                  style={[
+                    styles.vaccinationDate,
+                    { fontSize },
+                    isDarkTheme ? styles.darkText : styles.lightText,
+                  ]}
+                >
+                  {new Date(vaccination.vaccination_date).toLocaleDateString()}
+                </Text>
+                <TouchableOpacity
+                  style={styles.detailsButton}
+                  onPress={() =>
+                    navigation.navigate("VaccinationDetails", {
+                      vaccinationId: vaccination.id,
+                    })
+                  }
+                >
+                  <Text style={styles.detailsButtonText}>View Details</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))
+        )}
+        {vaccinations.length > 0 && (
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => navigation.navigate("AddVaccinationRecord")}
+          >
+            <Text style={styles.addButtonText}>Add New Vaccination</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -73,32 +155,67 @@ const VaccinationScheduleScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+  },
+  lightSafeArea: {
     backgroundColor: "#f0f0f0",
+  },
+  darkSafeArea: {
+    backgroundColor: "black",
   },
   container: {
     flexGrow: 1,
     padding: 20,
+  },
+  lightContainer: {
     backgroundColor: "#f0f0f0",
+  },
+  darkContainer: {
+    backgroundColor: "black",
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
     marginBottom: 20,
     textAlign: "center",
+  },
+  lightText: {
     color: "#333",
+  },
+  darkText: {
+    color: "#fff",
+  },
+  noLogsContainer: {
+    alignItems: "center",
+    marginTop: 50,
+  },
+  noLogsImage: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
+  },
+  noLogsText: {
+    fontSize: 18,
+    fontStyle: "italic",
+    textAlign: "center",
+    marginBottom: 20,
   },
   vaccinationCard: {
     flexDirection: "row",
     alignItems: "center",
     padding: 15,
     marginVertical: 10,
-    backgroundColor: "#fff",
     borderRadius: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 3,
+  },
+  lightCard: {
+    backgroundColor: "#fff",
+  },
+  darkCard: {
+    backgroundColor: "#444",
   },
   vaccinationDetails: {
     flex: 1,
@@ -107,17 +224,15 @@ const styles = StyleSheet.create({
   vaccinationName: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#333",
   },
   vaccinationDate: {
     fontSize: 16,
-    color: "#666",
     marginVertical: 5,
   },
   image: {
     width: 70,
     height: 70,
-    borderRadius: 30,
+    borderRadius: 20,
   },
   detailsButton: {
     marginTop: 10,
@@ -133,7 +248,7 @@ const styles = StyleSheet.create({
   },
   addButton: {
     marginTop: 30,
-    paddingVertical: 15,
+    padding: 15,
     backgroundColor: "#28a745",
     borderRadius: 5,
     alignItems: "center",

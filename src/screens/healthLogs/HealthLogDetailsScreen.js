@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   View,
   Text,
@@ -8,17 +8,28 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SettingsContext } from "../../context/SettingsContext";
 
 const HealthLogDetailsScreen = ({ route, navigation }) => {
   const { logId } = route.params;
+  const { fontSize, theme } = useContext(SettingsContext);
   const [logDetails, setLogDetails] = useState(null);
+
+  const isDarkTheme = theme === "dark";
 
   useFocusEffect(
     React.useCallback(() => {
       const fetchLogDetails = async () => {
         try {
+          const token = await AsyncStorage.getItem("token");
           const response = await fetch(
-            `http://192.168.1.39:3000/health-logs/${logId}`
+            `http://192.168.1.39:3000/health-logs/${logId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
           );
           const json = await response.json();
           if (response.ok) {
@@ -38,10 +49,14 @@ const HealthLogDetailsScreen = ({ route, navigation }) => {
 
   const handleDeleteLog = async () => {
     try {
+      const token = await AsyncStorage.getItem("token");
       const response = await fetch(
         `http://192.168.1.39:3000/health-logs/${logId}`,
         {
           method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
       if (response.ok) {
@@ -62,13 +77,39 @@ const HealthLogDetailsScreen = ({ route, navigation }) => {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Health Log Details</Text>
-      <Text style={styles.detailText}>Pet: {logDetails.pet_name}</Text>
-      <Text style={styles.detailText}>
+    <View style={[styles.container, isDarkTheme && styles.darkContainer]}>
+      <Text
+        style={[styles.title, { fontSize }, isDarkTheme && styles.darkText]}
+      >
+        Health Log Details
+      </Text>
+      <Text
+        style={[
+          styles.detailText,
+          { fontSize },
+          isDarkTheme && styles.darkText,
+        ]}
+      >
+        Pet: {logDetails.pet_name}
+      </Text>
+      <Text
+        style={[
+          styles.detailText,
+          { fontSize },
+          isDarkTheme && styles.darkText,
+        ]}
+      >
         Date: {new Date(logDetails.log_date).toLocaleDateString()}
       </Text>
-      <Text style={styles.detailText}>Details: {logDetails.details}</Text>
+      <Text
+        style={[
+          styles.detailText,
+          { fontSize },
+          isDarkTheme && styles.darkText,
+        ]}
+      >
+        Details: {logDetails.details}
+      </Text>
       <TouchableOpacity
         style={styles.button}
         onPress={() => navigation.navigate("EditHealthLog", { logId })}
@@ -93,11 +134,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#f0f0f0",
   },
+  darkContainer: {
+    backgroundColor: "#333",
+  },
   title: {
     fontSize: 28,
     fontWeight: "bold",
     marginBottom: 20,
     color: "#333",
+  },
+  darkText: {
+    color: "#fff",
   },
   detailText: {
     fontSize: 18,

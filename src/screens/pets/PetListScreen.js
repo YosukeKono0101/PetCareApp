@@ -1,9 +1,8 @@
 import { useFocusEffect } from "@react-navigation/native";
-import React, { useState } from "react";
+import React, { useState, useCallback, useContext } from "react";
 import {
   View,
   Text,
-  Button,
   StyleSheet,
   ScrollView,
   ActivityIndicator,
@@ -11,18 +10,27 @@ import {
   TouchableOpacity,
   SafeAreaView,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SettingsContext } from "../../context/SettingsContext";
 
 const PetListScreen = ({ navigation }) => {
+  const { fontSize, theme } = useContext(SettingsContext);
   const [pets, setPets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const isDarkTheme = theme === "dark";
+
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       const fetchPets = async () => {
         try {
-          const response = await fetch("http://192.168.1.39:3000/pets");
+          const token = await AsyncStorage.getItem("token");
+          const response = await fetch("http://192.168.1.39:3000/pets", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
           const json = await response.json();
-          // console.log("Fetched pets:", json);
           if (Array.isArray(json)) {
             setPets(json);
           } else {
@@ -47,35 +55,109 @@ const PetListScreen = ({ navigation }) => {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Your Pets</Text>
-        {pets.map((pet) => (
-          <View key={pet.id} style={styles.petCard}>
-            <Image
-              source={require("../../../assets/pet_icon.jpeg")}
-              style={styles.image}
-            />
-            <View style={styles.petDetails}>
-              <Text style={styles.petName}>{pet.name}</Text>
-              <Text style={styles.petType}>{pet.type}</Text>
-              <TouchableOpacity
-                style={styles.detailsButton}
-                onPress={() =>
-                  navigation.navigate("PetDetails", { petId: pet.id })
-                }
-              >
-                <Text style={styles.detailsButtonText}>View Details</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => navigation.navigate("AddPet")}
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        isDarkTheme ? styles.darkSafeArea : styles.lightSafeArea,
+      ]}
+    >
+      <ScrollView
+        contentContainerStyle={[
+          styles.container,
+          isDarkTheme ? styles.darkContainer : styles.lightContainer,
+        ]}
+      >
+        <Text
+          style={[
+            styles.title,
+            { fontSize },
+            isDarkTheme ? styles.darkText : styles.lightText,
+          ]}
         >
-          <Text style={styles.addButtonText}>Add New Pet</Text>
-        </TouchableOpacity>
+          Your Pets
+        </Text>
+        {pets.length === 0 ? (
+          <View style={styles.noPetsContainer}>
+            <Image
+              source={
+                isDarkTheme
+                  ? require("../../../assets/dog_dark.png")
+                  : require("../../../assets/dog_white.png")
+              }
+              style={styles.noPetsImage}
+            />
+            <Text
+              style={[
+                styles.noPetsText,
+                { fontSize },
+                isDarkTheme ? styles.darkText : styles.lightText,
+              ]}
+            >
+              You have not added any pets yet.
+            </Text>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => navigation.navigate("AddPet")}
+            >
+              <Text style={styles.addButtonText}>Add Your First Pet</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          pets.map((pet) => (
+            <View
+              key={pet.id}
+              style={[
+                styles.petCard,
+                isDarkTheme ? styles.darkCard : styles.lightCard,
+              ]}
+            >
+              <Image
+                source={
+                  isDarkTheme
+                    ? require("../../../assets/dog_dark.png")
+                    : require("../../../assets/dog_white.png")
+                }
+                style={styles.image}
+              />
+              <View style={styles.petDetails}>
+                <Text
+                  style={[
+                    styles.petName,
+                    { fontSize },
+                    isDarkTheme ? styles.darkText : styles.lightText,
+                  ]}
+                >
+                  {pet.name}
+                </Text>
+                <Text
+                  style={[
+                    styles.petType,
+                    { fontSize },
+                    isDarkTheme ? styles.darkText : styles.lightText,
+                  ]}
+                >
+                  {pet.type}
+                </Text>
+                <TouchableOpacity
+                  style={styles.detailsButton}
+                  onPress={() =>
+                    navigation.navigate("PetDetails", { petId: pet.id })
+                  }
+                >
+                  <Text style={styles.detailsButtonText}>View Details</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))
+        )}
+        {pets.length > 0 && (
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => navigation.navigate("AddPet")}
+          >
+            <Text style={styles.addButtonText}>Add New Pet</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -84,12 +166,22 @@ const PetListScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+  },
+  lightSafeArea: {
     backgroundColor: "#f0f0f0",
+  },
+  darkSafeArea: {
+    backgroundColor: "black",
   },
   container: {
     flexGrow: 1,
     padding: 15,
+  },
+  lightContainer: {
     backgroundColor: "#f0f0f0",
+  },
+  darkContainer: {
+    backgroundColor: "black",
   },
   loader: {
     flex: 1,
@@ -101,20 +193,46 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 20,
     textAlign: "center",
+  },
+  lightText: {
     color: "#333",
+  },
+  darkText: {
+    color: "#fff",
+  },
+  noPetsContainer: {
+    alignItems: "center",
+    marginTop: 50,
+  },
+  noPetsImage: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
+    borderRadius: 1000,
+  },
+  noPetsText: {
+    fontSize: 18,
+    fontStyle: "italic",
+    textAlign: "center",
+    marginBottom: 20,
   },
   petCard: {
     flexDirection: "row",
     alignItems: "center",
     padding: 15,
     marginVertical: 10,
-    backgroundColor: "#fff",
     borderRadius: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 3,
+  },
+  lightCard: {
+    backgroundColor: "#fff",
+  },
+  darkCard: {
+    backgroundColor: "#444",
   },
   petDetails: {
     flex: 1,
@@ -123,11 +241,9 @@ const styles = StyleSheet.create({
   petName: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#333",
   },
   petType: {
     fontSize: 16,
-    color: "#666",
     marginVertical: 5,
   },
   image: {
@@ -149,7 +265,7 @@ const styles = StyleSheet.create({
   },
   addButton: {
     marginTop: 30,
-    paddingVertical: 15,
+    padding: 15,
     backgroundColor: "#28a745",
     borderRadius: 5,
     alignItems: "center",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   View,
   Text,
@@ -8,17 +8,28 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SettingsContext } from "../../context/SettingsContext";
 
 const VaccinationDetailsScreen = ({ route, navigation }) => {
   const { vaccinationId } = route.params;
+  const { fontSize, theme } = useContext(SettingsContext);
   const [vaccinationDetails, setVaccinationDetails] = useState(null);
+
+  const isDarkTheme = theme === "dark";
 
   useFocusEffect(
     React.useCallback(() => {
       const fetchVaccinationDetails = async () => {
         try {
+          const token = await AsyncStorage.getItem("token");
           const response = await fetch(
-            `http://192.168.1.39:3000/vaccination/${vaccinationId}`
+            `http://192.168.1.39:3000/vaccination/${vaccinationId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
           );
           const json = await response.json();
           if (response.ok) {
@@ -40,9 +51,15 @@ const VaccinationDetailsScreen = ({ route, navigation }) => {
 
   const handleDeleteVaccination = async () => {
     try {
+      const token = await AsyncStorage.getItem("token");
       const response = await fetch(
         `http://192.168.1.39:3000/vaccination/${vaccinationId}`,
-        { method: "DELETE" }
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       const json = await response.json();
       if (response.ok) {
@@ -66,12 +83,28 @@ const VaccinationDetailsScreen = ({ route, navigation }) => {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Vaccination Details</Text>
-      <Text style={styles.detailText}>
+    <View style={[styles.container, isDarkTheme && styles.darkContainer]}>
+      <Text
+        style={[styles.title, { fontSize }, isDarkTheme && styles.darkText]}
+      >
+        Vaccination Details
+      </Text>
+      <Text
+        style={[
+          styles.detailText,
+          { fontSize },
+          isDarkTheme && styles.darkText,
+        ]}
+      >
         Vaccine Name: {vaccinationDetails.vaccine_name}
       </Text>
-      <Text style={styles.detailText}>
+      <Text
+        style={[
+          styles.detailText,
+          { fontSize },
+          isDarkTheme && styles.darkText,
+        ]}
+      >
         Vaccination Date:{" "}
         {new Date(vaccinationDetails.vaccination_date).toLocaleDateString()}
       </Text>
@@ -101,6 +134,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#f0f0f0",
   },
+  darkContainer: {
+    backgroundColor: "#333",
+  },
   loaderContainer: {
     flex: 1,
     justifyContent: "center",
@@ -112,6 +148,9 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 20,
     color: "#333",
+  },
+  darkText: {
+    color: "#fff",
   },
   detailText: {
     fontSize: 18,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
@@ -9,17 +9,28 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SettingsContext } from "../../context/SettingsContext";
 
 const PetDetailsScreen = ({ route, navigation }) => {
   const { petId } = route.params;
   const [petDetails, setPetDetails] = useState(null);
+  const { fontSize, theme } = useContext(SettingsContext);
+
+  const isDarkTheme = theme === "dark";
 
   useFocusEffect(
     React.useCallback(() => {
       const fetchPetDetails = async () => {
         try {
+          const token = await AsyncStorage.getItem("token");
           const response = await fetch(
-            `http://192.168.1.39:3000/pets/${petId}`
+            `http://192.168.1.39:3000/pets/${petId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
           );
           const json = await response.json();
           if (response.ok) {
@@ -46,8 +57,12 @@ const PetDetailsScreen = ({ route, navigation }) => {
 
   const handleDeletePet = async () => {
     try {
+      const token = await AsyncStorage.getItem("token");
       const response = await fetch(`http://192.168.1.39:3000/pets/${petId}`, {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       const json = await response.json();
       if (response.ok) {
@@ -69,18 +84,70 @@ const PetDetailsScreen = ({ route, navigation }) => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isDarkTheme && styles.darkContainer]}>
       <Image
         source={require("../../../assets/pet_icon.jpeg")}
         style={styles.image}
       />
-      <Text style={styles.title}>{petDetails.name}</Text>
-      <Text style={styles.detailText}>Type: {petDetails.type}</Text>
-      <Text style={styles.detailText}>Gender: {petDetails.gender}</Text>
-      <Text style={styles.detailText}>Breed: {petDetails.breed}</Text>
-      <Text style={styles.detailText}>Age: {petDetails.age}</Text>
-      <Text style={styles.detailText}>Weight: {petDetails.weight}</Text>
-      <Text style={styles.detailText}>Birth Date: {petDetails.birthDate}</Text>
+      <Text
+        style={[styles.title, { fontSize }, isDarkTheme && styles.darkText]}
+      >
+        {petDetails.name}
+      </Text>
+      <Text
+        style={[
+          styles.detailText,
+          { fontSize },
+          isDarkTheme && styles.darkText,
+        ]}
+      >
+        Type: {petDetails.type}
+      </Text>
+      <Text
+        style={[
+          styles.detailText,
+          { fontSize },
+          isDarkTheme && styles.darkText,
+        ]}
+      >
+        Gender: {petDetails.gender}
+      </Text>
+      <Text
+        style={[
+          styles.detailText,
+          { fontSize },
+          isDarkTheme && styles.darkText,
+        ]}
+      >
+        Breed: {petDetails.breed}
+      </Text>
+      <Text
+        style={[
+          styles.detailText,
+          { fontSize },
+          isDarkTheme && styles.darkText,
+        ]}
+      >
+        Age: {petDetails.age}
+      </Text>
+      <Text
+        style={[
+          styles.detailText,
+          { fontSize },
+          isDarkTheme && styles.darkText,
+        ]}
+      >
+        Weight: {petDetails.weight}
+      </Text>
+      <Text
+        style={[
+          styles.detailText,
+          { fontSize },
+          isDarkTheme && styles.darkText,
+        ]}
+      >
+        Birth Date: {petDetails.birthDate}
+      </Text>
       <TouchableOpacity
         style={styles.editButton}
         onPress={() => navigation.navigate("EditPet", { petId })}
@@ -101,6 +168,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#f0f0f0",
   },
+  darkContainer: {
+    backgroundColor: "#333",
+  },
   loader: {
     flex: 1,
     justifyContent: "center",
@@ -119,6 +189,9 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 10,
     color: "#333",
+  },
+  darkText: {
+    color: "#fff",
   },
   detailText: {
     fontSize: 18,

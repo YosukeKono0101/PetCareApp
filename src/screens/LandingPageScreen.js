@@ -1,21 +1,34 @@
-import React from "react";
-import {
-  View,
-  Text,
-  Button,
-  StyleSheet,
-  Image,
-  TouchableOpacity,
-} from "react-native";
+import React, { useContext } from "react";
+import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
+import { SettingsContext } from "../context/SettingsContext";
 
 const LandingPageScreen = ({ navigation }) => {
+  const { theme } = useContext(SettingsContext);
+  const isDarkTheme = theme === "dark";
+
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        isDarkTheme ? styles.darkContainer : styles.lightContainer,
+      ]}
+    >
       <Image
-        source={require("../../assets/app_logo.png")}
+        source={
+          isDarkTheme
+            ? require("../../assets/app_logo_dark.png")
+            : require("../../assets/app_logo_white.png")
+        }
         style={styles.logo}
       />
-      <Text style={styles.welcomeText}>Welcome to PetWell</Text>
+      <Text
+        style={[
+          styles.welcomeText,
+          isDarkTheme ? styles.darkText : styles.lightText,
+        ]}
+      >
+        Welcome to PetWell
+      </Text>
       <TouchableOpacity
         style={styles.button}
         onPress={() => navigation.navigate("Login")}
@@ -37,8 +50,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "white",
     padding: 20,
+  },
+  lightContainer: {
+    backgroundColor: "white",
+  },
+  darkContainer: {
+    backgroundColor: "black",
   },
   logo: {
     width: 350,
@@ -48,8 +66,13 @@ const styles = StyleSheet.create({
   welcomeText: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#333",
     marginBottom: 20,
+  },
+  lightText: {
+    color: "#333",
+  },
+  darkText: {
+    color: "#fff",
   },
   button: {
     backgroundColor: "#4CAF50",

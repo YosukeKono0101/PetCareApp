@@ -1,27 +1,37 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   View,
   TextInput,
-  Button,
-  StyleSheet,
   Alert,
+  StyleSheet,
   ScrollView,
   Text,
   TouchableOpacity,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SettingsContext } from "../../context/SettingsContext";
 
 const EditHealthLogScreen = ({ route, navigation }) => {
   const { logId } = route.params;
+  const { fontSize, theme } = useContext(SettingsContext);
   const [logDate, setLogDate] = useState(new Date());
   const [details, setDetails] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
 
+  const isDarkTheme = theme === "dark";
+
   useEffect(() => {
     const fetchLogDetails = async () => {
       try {
+        const token = await AsyncStorage.getItem("token");
         const response = await fetch(
-          `http://192.168.1.39:3000/health-logs/${logId}`
+          `http://192.168.1.39:3000/health-logs/${logId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         const json = await response.json();
         if (response.ok) {
@@ -46,12 +56,14 @@ const EditHealthLogScreen = ({ route, navigation }) => {
 
   const handleUpdateLog = async () => {
     try {
+      const token = await AsyncStorage.getItem("token");
       const response = await fetch(
         `http://192.168.1.39:3000/health-logs/${logId}`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             log_date: logDate.toISOString(),
@@ -79,13 +91,22 @@ const EditHealthLogScreen = ({ route, navigation }) => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Edit Health Log</Text>
+    <ScrollView
+      contentContainerStyle={[
+        styles.container,
+        isDarkTheme && styles.darkContainer,
+      ]}
+    >
+      <Text
+        style={[styles.title, { fontSize }, isDarkTheme && styles.darkText]}
+      >
+        Edit Health Log
+      </Text>
       <TouchableOpacity
         style={styles.dateButton}
         onPress={() => setShowDatePicker(true)}
       >
-        <Text style={styles.dateButtonText}>
+        <Text style={[styles.dateButtonText, { fontSize }]}>
           Choose Log Date: {logDate.toLocaleDateString()}
         </Text>
       </TouchableOpacity>
@@ -101,7 +122,7 @@ const EditHealthLogScreen = ({ route, navigation }) => {
         placeholder="Details"
         value={details}
         onChangeText={setDetails}
-        style={styles.input}
+        style={[styles.input, { fontSize }]}
         multiline
       />
       <TouchableOpacity style={styles.button} onPress={handleUpdateLog}>
@@ -118,12 +139,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#f0f0f0",
   },
+  darkContainer: {
+    backgroundColor: "#333",
+  },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
     textAlign: "center",
     color: "#333",
+  },
+  darkText: {
+    color: "#fff",
   },
   dateButton: {
     backgroundColor: "#007bff",

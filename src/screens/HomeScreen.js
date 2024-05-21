@@ -1,5 +1,5 @@
 import { useFocusEffect } from "@react-navigation/native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
@@ -12,10 +12,14 @@ import {
   SafeAreaView,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SettingsContext } from "../context/SettingsContext";
 
 const HomeScreen = ({ navigation }) => {
   const [pets, setPets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { fontSize, theme } = useContext(SettingsContext);
+
+  const isDarkTheme = theme === "dark";
 
   useFocusEffect(
     React.useCallback(() => {
@@ -45,11 +49,6 @@ const HomeScreen = ({ navigation }) => {
     }, [])
   );
 
-  const handleLogout = async () => {
-    await AsyncStorage.removeItem("token");
-    navigation.navigate("Login");
-  };
-
   if (isLoading) {
     return (
       <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
@@ -57,65 +56,152 @@ const HomeScreen = ({ navigation }) => {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Welcome to Pet Care App</Text>
+    <SafeAreaView style={[styles.safeArea, isDarkTheme && styles.darkSafeArea]}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.container,
+          isDarkTheme && styles.darkContainer,
+        ]}
+      >
+        <Text
+          style={[styles.title, { fontSize }, isDarkTheme && styles.darkText]}
+        >
+          Welcome to Pet Care App
+        </Text>
         <View style={styles.quickLinks}>
           <TouchableOpacity
-            style={styles.linkCard}
+            style={[styles.linkCard, isDarkTheme && styles.darkCard]}
             onPress={() => navigation.navigate("PetList")}
           >
             <Image
-              source={require("../../assets/pet_icon.jpeg")}
+              source={
+                isDarkTheme
+                  ? require("../../assets/dog_dark.png")
+                  : require("../../assets/dog_white.png")
+              }
               style={styles.linkImage}
             />
-            <Text style={styles.linkText}>Your Pets</Text>
+            <Text
+              style={[
+                styles.linkText,
+                { fontSize },
+                isDarkTheme && styles.darkText,
+              ]}
+            >
+              Your Pets
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.linkCard}
+            style={[styles.linkCard, isDarkTheme && styles.darkCard]}
             onPress={() => navigation.navigate("HealthLogList")}
           >
             <Image
-              source={require("../../assets/health_log.png")}
+              source={
+                isDarkTheme
+                  ? require("../../assets/health_log_dark.png")
+                  : require("../../assets/health_log_white.png")
+              }
               style={styles.linkImage}
             />
-            <Text style={styles.linkText}>Health Logs</Text>
+            <Text
+              style={[
+                styles.linkText,
+                { fontSize },
+                isDarkTheme && styles.darkText,
+              ]}
+            >
+              Health Logs
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.linkCard}
+            style={[styles.linkCard, isDarkTheme && styles.darkCard]}
             onPress={() => navigation.navigate("VaccinationSchedule")}
           >
             <Image
-              source={require("../../assets/vaccination.png")}
+              source={
+                isDarkTheme
+                  ? require("../../assets/vaccine_dark.png")
+                  : require("../../assets/vaccine_white.png")
+              }
               style={styles.linkImage}
             />
-            <Text style={styles.linkText}>Vaccination Schedule</Text>
+            <Text
+              style={[
+                styles.linkText,
+                { fontSize },
+                isDarkTheme && styles.darkText,
+              ]}
+            >
+              Vaccines
+            </Text>
           </TouchableOpacity>
         </View>
-        <Text style={styles.subtitle}>Your Pets</Text>
-        {pets.map((pet) => (
-          <View key={pet.id} style={styles.petCard}>
-            <Image
-              source={require("../../assets/pet_icon.jpeg")}
-              style={styles.image}
-            />
-            <View style={styles.petDetails}>
-              <Text style={styles.petName}>{pet.name}</Text>
-              <Text style={styles.petType}>{pet.type}</Text>
-              <TouchableOpacity
-                style={styles.detailsButton}
-                onPress={() =>
-                  navigation.navigate("PetDetails", { petId: pet.id })
+        <Text
+          style={[
+            styles.subtitle,
+            { fontSize },
+            isDarkTheme && styles.darkText,
+          ]}
+        >
+          Your Pets
+        </Text>
+        {pets.length === 0 ? (
+          <Text
+            style={[
+              styles.noPetsText,
+              { fontSize },
+              isDarkTheme && styles.darkText,
+            ]}
+          >
+            No pets added yet.
+          </Text>
+        ) : (
+          pets.map((pet) => (
+            <View
+              key={pet.id}
+              style={[styles.petCard, isDarkTheme && styles.darkCard]}
+            >
+              <Image
+                source={
+                  isDarkTheme
+                    ? require("../../assets/dog_dark.png")
+                    : require("../../assets/dog_white.png")
                 }
-              >
-                <Text style={styles.detailsButtonText}>View Details</Text>
-              </TouchableOpacity>
+                style={styles.image}
+              />
+              <View style={styles.petDetails}>
+                <Text
+                  style={[
+                    styles.petName,
+                    { fontSize },
+                    isDarkTheme && styles.darkText,
+                  ]}
+                >
+                  {pet.name}
+                </Text>
+                <Text
+                  style={[
+                    styles.petType,
+                    { fontSize },
+                    isDarkTheme && styles.darkText,
+                  ]}
+                >
+                  {pet.type}
+                </Text>
+                <TouchableOpacity
+                  style={styles.detailsButton}
+                  onPress={() =>
+                    navigation.navigate("PetDetails", { petId: pet.id })
+                  }
+                >
+                  <Text style={[styles.detailsButtonText, { fontSize }]}>
+                    View Details
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        ))}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>Logout</Text>
-        </TouchableOpacity>
+          ))
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -126,10 +212,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f0f0f0",
   },
+  darkSafeArea: {
+    backgroundColor: "black",
+  },
   container: {
     flexGrow: 1,
     padding: 20,
     backgroundColor: "#f0f0f0",
+  },
+  darkContainer: {
+    backgroundColor: "black",
   },
   loader: {
     flex: 1,
@@ -142,6 +234,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: "center",
     color: "#333",
+  },
+  darkText: {
+    color: "#fff",
   },
   quickLinks: {
     flexDirection: "row",
@@ -160,9 +255,12 @@ const styles = StyleSheet.create({
     elevation: 3,
     width: "30%",
   },
+  darkCard: {
+    backgroundColor: "#444",
+  },
   linkImage: {
-    width: 50,
-    height: 50,
+    width: 70,
+    height: 70,
     borderRadius: 25,
     marginBottom: 10,
   },
@@ -176,6 +274,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 20,
     color: "#333",
+  },
+  noPetsText: {
+    fontSize: 18,
+    fontStyle: "italic",
+    color: "#666",
+    textAlign: "center",
+    marginTop: 20,
   },
   petCard: {
     flexDirection: "row",
@@ -219,19 +324,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     textAlign: "center",
-  },
-  logoutButton: {
-    backgroundColor: "#dc3545",
-    padding: 15,
-    borderRadius: 25,
-    alignItems: "center",
-    marginTop: 30,
-    width: "100%",
-  },
-  logoutButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
   },
 });
 

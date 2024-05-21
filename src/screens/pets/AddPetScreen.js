@@ -1,17 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   View,
   TextInput,
-  Button,
-  StyleSheet,
   Alert,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  Modal,
   ScrollView,
-  Platform,
+  SafeAreaView,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SettingsContext } from "../../context/SettingsContext";
 
 const AddPetScreen = ({ navigation }) => {
   const [name, setName] = useState("");
@@ -22,6 +22,9 @@ const AddPetScreen = ({ navigation }) => {
   const [weight, setWeight] = useState("");
   const [birthDate, setBirthDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const { fontSize, theme } = useContext(SettingsContext);
+  const isDarkTheme = theme === "dark";
 
   const handleAddPet = async () => {
     const petData = {
@@ -34,10 +37,12 @@ const AddPetScreen = ({ navigation }) => {
       birthDate: birthDate.toISOString(),
     };
     try {
+      const token = await AsyncStorage.getItem("token");
       const response = await fetch("http://192.168.1.39:3000/pets", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(petData),
       });
@@ -70,76 +75,115 @@ const AddPetScreen = ({ navigation }) => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      <View style={styles.container}>
-        <Text style={styles.header}>Add New Pet</Text>
-        <TextInput
-          placeholder="Pet Name"
-          value={name}
-          onChangeText={setName}
-          style={styles.input}
-        />
-        <TextInput
-          placeholder="Type (e.g., Dog, Cat)"
-          value={type}
-          onChangeText={setType}
-          style={styles.input}
-        />
-        <TextInput
-          placeholder="Gender"
-          value={gender}
-          onChangeText={setGender}
-          style={styles.input}
-        />
-        <TextInput
-          placeholder="Breed"
-          value={breed}
-          onChangeText={setBreed}
-          style={styles.input}
-        />
-        <TextInput
-          placeholder="Age"
-          value={age}
-          onChangeText={setAge}
-          style={styles.input}
-          keyboardType="numeric"
-        />
-        <TextInput
-          placeholder="Weight (kg)"
-          value={weight}
-          onChangeText={setWeight}
-          style={styles.input}
-          keyboardType="numeric"
-        />
-        <TouchableOpacity
-          onPress={showDatePickerModal}
-          style={styles.dateButton}
-        >
-          <Text style={styles.dateButtonText}>
-            Select Birth Date: {birthDate.toLocaleDateString()}
-          </Text>
-        </TouchableOpacity>
-        {showDatePicker && (
-          <DateTimePicker
-            value={birthDate}
-            mode="date"
-            display="default"
-            onChange={onDateChange}
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        isDarkTheme ? styles.darkSafeArea : styles.lightSafeArea,
+      ]}
+    >
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContainer,
+          isDarkTheme && styles.darkScrollContainer,
+        ]}
+      >
+        <View style={[styles.container, isDarkTheme && styles.darkContainer]}>
+          {/* <Text
+            style={[
+              styles.header,
+              { fontSize },
+              isDarkTheme && styles.darkText,
+            ]}
+          >
+            Add New Pet
+          </Text> */}
+          <TextInput
+            placeholder="Pet Name"
+            value={name}
+            onChangeText={setName}
+            style={[styles.input, isDarkTheme && styles.darkInput]}
+            placeholderTextColor={isDarkTheme ? "#ccc" : "#aaa"}
           />
-        )}
-        <TouchableOpacity style={styles.button} onPress={handleAddPet}>
-          <Text style={styles.buttonText}>Add Pet</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          <TextInput
+            placeholder="Type (e.g., Dog, Cat)"
+            value={type}
+            onChangeText={setType}
+            style={[styles.input, isDarkTheme && styles.darkInput]}
+            placeholderTextColor={isDarkTheme ? "#ccc" : "#aaa"}
+          />
+          <TextInput
+            placeholder="Gender"
+            value={gender}
+            onChangeText={setGender}
+            style={[styles.input, isDarkTheme && styles.darkInput]}
+            placeholderTextColor={isDarkTheme ? "#ccc" : "#aaa"}
+          />
+          <TextInput
+            placeholder="Breed"
+            value={breed}
+            onChangeText={setBreed}
+            style={[styles.input, isDarkTheme && styles.darkInput]}
+            placeholderTextColor={isDarkTheme ? "#ccc" : "#aaa"}
+          />
+          <TextInput
+            placeholder="Age"
+            value={age}
+            onChangeText={setAge}
+            style={[styles.input, isDarkTheme && styles.darkInput]}
+            keyboardType="numeric"
+            placeholderTextColor={isDarkTheme ? "#ccc" : "#aaa"}
+          />
+          <TextInput
+            placeholder="Weight (kg)"
+            value={weight}
+            onChangeText={setWeight}
+            style={[styles.input, isDarkTheme && styles.darkInput]}
+            keyboardType="numeric"
+            placeholderTextColor={isDarkTheme ? "#ccc" : "#aaa"}
+          />
+          <TouchableOpacity
+            onPress={showDatePickerModal}
+            style={styles.dateButton}
+          >
+            <Text style={[styles.dateButtonText, { fontSize }]}>
+              Select Birth Date: {birthDate.toLocaleDateString()}
+            </Text>
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              value={birthDate}
+              mode="date"
+              display="default"
+              onChange={onDateChange}
+            />
+          )}
+          <TouchableOpacity style={styles.button} onPress={handleAddPet}>
+            <Text style={[styles.buttonText, { fontSize }]}>Add Pet</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+  lightSafeArea: {
+    backgroundColor: "#f0f0f0",
+  },
+  darkSafeArea: {
+    backgroundColor: "#000",
+  },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
+    padding: 20,
+  },
+  darkScrollContainer: {
+    backgroundColor: "#000",
   },
   container: {
     width: "100%",
@@ -148,12 +192,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#f0f0f0",
     borderRadius: 10,
   },
+  darkContainer: {
+    backgroundColor: "#333",
+  },
   header: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
     textAlign: "center",
     color: "#333",
+  },
+  darkText: {
+    color: "#fff",
   },
   input: {
     height: 50,
@@ -163,6 +213,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     marginBottom: 20,
     backgroundColor: "#fff",
+  },
+  darkInput: {
+    borderColor: "#555",
+    backgroundColor: "#444",
+    color: "#fff",
   },
   dateButton: {
     padding: 15,
