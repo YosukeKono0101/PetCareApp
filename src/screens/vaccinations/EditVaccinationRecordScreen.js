@@ -2,11 +2,11 @@ import React, { useState, useEffect, useContext } from "react";
 import {
   View,
   TextInput,
-  Button,
-  StyleSheet,
   Alert,
-  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
   Text,
+  TouchableOpacity,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -15,8 +15,9 @@ import { SettingsContext } from "../../context/SettingsContext";
 const EditVaccinationRecordScreen = ({ route, navigation }) => {
   const { vaccinationId } = route.params;
   const { fontSize, theme } = useContext(SettingsContext);
-  const [vaccineName, setVaccineName] = useState("");
+  const [vaccineName, setVaccineName] = useState(new Date());
   const [vaccinationDate, setVaccinationDate] = useState(new Date());
+  const [petName, setPetName] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const isDarkTheme = theme === "dark";
@@ -36,6 +37,7 @@ const EditVaccinationRecordScreen = ({ route, navigation }) => {
         const json = await response.json();
         setVaccineName(json.data.vaccine_name);
         setVaccinationDate(new Date(json.data.vaccination_date));
+        setPetName(json.data.pet_name);
       } catch (error) {
         Alert.alert("Error", "Could not load vaccination details.");
       }
@@ -57,7 +59,7 @@ const EditVaccinationRecordScreen = ({ route, navigation }) => {
           },
           body: JSON.stringify({
             vaccine_name: vaccineName,
-            vaccination_date: vaccinationDate.toISOString().split("T")[0],
+            vaccination_date: vaccinationDate.toISOString(),
           }),
         }
       );
@@ -76,22 +78,33 @@ const EditVaccinationRecordScreen = ({ route, navigation }) => {
 
   const onDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || vaccinationDate;
-    setShowDatePicker(Platform.OS === "ios");
+    setShowDatePicker(false);
     setVaccinationDate(currentDate);
   };
 
   return (
-    <View style={[styles.container, isDarkTheme && styles.darkContainer]}>
+    <ScrollView
+      contentContainerStyle={[
+        styles.container,
+        isDarkTheme && styles.darkContainer,
+      ]}
+    >
       <Text
         style={[styles.title, { fontSize }, isDarkTheme && styles.darkText]}
       >
         Edit Vaccination Record
       </Text>
+      <Text
+        style={[styles.subtitle, { fontSize }, isDarkTheme && styles.darkText]}
+      >
+        Pet: {petName}
+      </Text>
       <TextInput
         placeholder="Vaccine Name"
         value={vaccineName}
         onChangeText={setVaccineName}
-        style={[styles.input, { fontSize }]}
+        style={[styles.input, { fontSize }, isDarkTheme && styles.darkInput]}
+        placeholderTextColor={isDarkTheme ? "#ccc" : "#aaa"}
       />
       <TouchableOpacity
         style={styles.dateButton}
@@ -112,13 +125,13 @@ const EditVaccinationRecordScreen = ({ route, navigation }) => {
       <TouchableOpacity style={styles.button} onPress={handleUpdateVaccination}>
         <Text style={styles.buttonText}>Update Vaccination</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     padding: 20,
     justifyContent: "center",
     backgroundColor: "#f0f0f0",
@@ -133,7 +146,18 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#333",
   },
+  subtitle: {
+    fontSize: 20,
+    marginBottom: 10,
+    textAlign: "center",
+    color: "#555",
+  },
   darkText: {
+    color: "#fff",
+  },
+  darkInput: {
+    borderColor: "#555",
+    backgroundColor: "#444",
     color: "#fff",
   },
   input: {

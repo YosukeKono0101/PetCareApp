@@ -17,6 +17,7 @@ const EditHealthLogScreen = ({ route, navigation }) => {
   const { fontSize, theme } = useContext(SettingsContext);
   const [logDate, setLogDate] = useState(new Date());
   const [details, setDetails] = useState("");
+  const [petName, setPetName] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const isDarkTheme = theme === "dark";
@@ -37,6 +38,7 @@ const EditHealthLogScreen = ({ route, navigation }) => {
         if (response.ok) {
           setLogDate(new Date(json.log_date));
           setDetails(json.details);
+          setPetName(json.pet_name);
         } else {
           Alert.alert(
             "Error",
@@ -102,12 +104,17 @@ const EditHealthLogScreen = ({ route, navigation }) => {
       >
         Edit Health Log
       </Text>
+      <Text
+        style={[styles.petName, { fontSize }, isDarkTheme && styles.darkText]}
+      >
+        Pet: {petName}
+      </Text>
       <TouchableOpacity
         style={styles.dateButton}
         onPress={() => setShowDatePicker(true)}
       >
         <Text style={[styles.dateButtonText, { fontSize }]}>
-          Choose Log Date: {logDate.toLocaleDateString()}
+          Select Log Date: {logDate.toLocaleDateString()}
         </Text>
       </TouchableOpacity>
       {showDatePicker && (
@@ -151,6 +158,12 @@ const styles = StyleSheet.create({
   },
   darkText: {
     color: "#fff",
+  },
+  petName: {
+    fontSize: 20,
+    marginBottom: 10,
+    textAlign: "center",
+    color: "#555",
   },
   dateButton: {
     backgroundColor: "#007bff",

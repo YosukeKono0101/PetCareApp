@@ -96,6 +96,15 @@ const VaccinationDetailsScreen = ({ route, navigation }) => {
           isDarkTheme && styles.darkText,
         ]}
       >
+        Pet: {vaccinationDetails.pet_name}
+      </Text>
+      <Text
+        style={[
+          styles.detailText,
+          { fontSize },
+          isDarkTheme && styles.darkText,
+        ]}
+      >
         Vaccine Name: {vaccinationDetails.vaccine_name}
       </Text>
       <Text

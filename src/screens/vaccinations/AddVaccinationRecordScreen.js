@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useContext } from "react";
 import {
   View,
-  Text,
+  TextInput,
+  Alert,
   StyleSheet,
   ScrollView,
-  Alert,
-  TextInput,
+  Text,
   TouchableOpacity,
+  SafeAreaView,
 } from "react-native";
 import RNPickerSelect from "react-native-picker-select";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -47,8 +48,8 @@ const AddVaccinationRecordScreen = ({ navigation }) => {
   }, []);
 
   const handleAddVaccination = async () => {
-    if (!selectedPetId) {
-      Alert.alert("Error", "Please select a pet first.");
+    if (!selectedPetId || !vaccineName || !vaccinationDate || !notes) {
+      Alert.alert("Error", "Please fill in all the fields.");
       return;
     }
     try {
@@ -62,7 +63,7 @@ const AddVaccinationRecordScreen = ({ navigation }) => {
         body: JSON.stringify({
           pet_id: selectedPetId,
           vaccine_name: vaccineName,
-          vaccination_date: vaccinationDate.toISOString().split("T")[0],
+          vaccination_date: vaccinationDate.toISOString(),
           notes: notes,
         }),
       });
@@ -79,6 +80,10 @@ const AddVaccinationRecordScreen = ({ navigation }) => {
     }
   };
 
+  const showDatePickerModal = () => {
+    setShowDatePicker(true);
+  };
+
   const onDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || vaccinationDate;
     setShowDatePicker(false);
@@ -86,72 +91,115 @@ const AddVaccinationRecordScreen = ({ navigation }) => {
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={[
-        styles.container,
-        isDarkTheme && styles.darkContainer,
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        isDarkTheme ? styles.darkSafeArea : styles.lightSafeArea,
       ]}
     >
-      <Text
-        style={[styles.header, { fontSize }, isDarkTheme && styles.darkText]}
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContainer,
+          isDarkTheme && styles.darkScrollContainer,
+        ]}
       >
-        Add Vaccination Record
-      </Text>
-      {pets.length > 0 && (
-        <RNPickerSelect
-          onValueChange={(value) => setSelectedPetId(value)}
-          items={pets.map((pet) => ({
-            label: pet.name,
-            value: pet.id,
-          }))}
-          placeholder={{ label: "Select a pet", value: null }}
-          style={pickerSelectStyles}
-        />
-      )}
-      <RNPickerSelect
-        onValueChange={(value) => setVaccineName(value)}
-        items={vaccines.map((vaccine) => ({
-          label: vaccine,
-          value: vaccine,
-        }))}
-        placeholder={{ label: "Select a vaccine", value: null }}
-        style={pickerSelectStyles}
-      />
-      <TouchableOpacity
-        style={styles.dateButton}
-        onPress={() => setShowDatePicker(true)}
-      >
-        <Text style={[styles.dateButtonText, { fontSize }]}>
-          Choose Vaccination Date: {vaccinationDate.toLocaleDateString()}
-        </Text>
-      </TouchableOpacity>
-      {showDatePicker && (
-        <DateTimePicker
-          value={vaccinationDate}
-          mode="date"
-          display="default"
-          onChange={onDateChange}
-        />
-      )}
-      <TextInput
-        placeholder="Notes"
-        value={notes}
-        onChangeText={setNotes}
-        style={[styles.input, { fontSize }]}
-        multiline
-      />
-      <TouchableOpacity style={styles.button} onPress={handleAddVaccination}>
-        <Text style={styles.buttonText}>Add Vaccination</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <View style={[styles.container, isDarkTheme && styles.darkContainer]}>
+          <Text
+            style={[
+              styles.header,
+              { fontSize },
+              isDarkTheme && styles.darkText,
+            ]}
+          >
+            Add Vaccination Record
+          </Text>
+          {pets.length > 0 && (
+            <RNPickerSelect
+              onValueChange={(value) => setSelectedPetId(value)}
+              items={pets.map((pet) => ({
+                label: pet.name,
+                value: pet.id,
+              }))}
+              placeholder={{ label: "Select a pet", value: null }}
+              style={pickerSelectStyles}
+            />
+          )}
+          <RNPickerSelect
+            onValueChange={(value) => setVaccineName(value)}
+            items={vaccines.map((vaccine) => ({
+              label: vaccine,
+              value: vaccine,
+            }))}
+            placeholder={{ label: "Select a vaccine", value: null }}
+            style={pickerSelectStyles}
+          />
+          <TouchableOpacity
+            style={styles.dateButton}
+            onPress={showDatePickerModal}
+          >
+            <Text style={[styles.dateButtonText, { fontSize }]}>
+              Select Vaccination Date: {vaccinationDate.toLocaleDateString()}
+            </Text>
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              value={vaccinationDate}
+              mode="date"
+              display="default"
+              onChange={onDateChange}
+            />
+          )}
+          <TextInput
+            placeholder="Notes"
+            value={notes}
+            onChangeText={setNotes}
+            style={[
+              styles.input,
+              { fontSize },
+              isDarkTheme && styles.darkInput,
+            ]}
+            multiline
+            placeholderTextColor={isDarkTheme ? "#ccc" : "#aaa"}
+          />
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleAddVaccination}
+          >
+            <Text style={[styles.buttonText, { fontSize }]}>
+              Add Vaccination
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
+  },
+  lightSafeArea: {
+    backgroundColor: "#f0f0f0",
+  },
+  darkSafeArea: {
+    backgroundColor: "#000",
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  darkScrollContainer: {
+    backgroundColor: "#333",
+  },
+  container: {
+    width: "100%",
+    maxWidth: 400,
     padding: 20,
     backgroundColor: "#f0f0f0",
+    borderRadius: 10,
   },
   darkContainer: {
     backgroundColor: "#333",
@@ -167,11 +215,11 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   picker: {
-    marginBottom: 30,
+    marginBottom: 20,
   },
   dateButton: {
-    backgroundColor: "#007bff",
     padding: 15,
+    backgroundColor: "#007bff",
     borderRadius: 10,
     alignItems: "center",
     marginBottom: 20,
@@ -191,11 +239,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     marginBottom: 20,
   },
+  darkInput: {
+    borderColor: "#555",
+    backgroundColor: "#444",
+    color: "#fff",
+  },
   button: {
-    backgroundColor: "#28a745",
     padding: 15,
+    backgroundColor: "#28a745",
     borderRadius: 10,
     alignItems: "center",
+    marginTop: 20,
   },
   buttonText: {
     color: "#fff",

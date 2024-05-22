@@ -115,7 +115,7 @@ const SettingsScreen = ({ navigation }) => {
           <Text style={[styles.aboutButtonText, { fontSize }]}>About</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>Logout</Text>
+          <Text style={[styles.aboutButtonText, { fontSize }]}>Logout</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

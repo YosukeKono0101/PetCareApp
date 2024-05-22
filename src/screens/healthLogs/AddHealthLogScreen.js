@@ -7,6 +7,7 @@ import {
   ScrollView,
   Text,
   TouchableOpacity,
+  SafeAreaView,
 } from "react-native";
 import RNPickerSelect from "react-native-picker-select";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -45,8 +46,8 @@ const AddHealthLogScreen = ({ navigation }) => {
   }, []);
 
   const handleAddHealthLog = async () => {
-    if (!selectedPetId) {
-      Alert.alert("Error", "Please select a pet first.");
+    if (!selectedPetId || !details) {
+      Alert.alert("Error", "Please select a pet and fill in the details.");
       return;
     }
     try {
@@ -76,71 +77,115 @@ const AddHealthLogScreen = ({ navigation }) => {
     }
   };
 
+  const showDatePickerModal = () => {
+    setShowDatePicker(true);
+  };
+
+  const onDateChange = (event, selectedDate) => {
+    const currentDate = selectedDate || logDate;
+    setShowDatePicker(false);
+    setLogDate(currentDate);
+  };
+
   return (
-    <ScrollView
-      contentContainerStyle={[
-        styles.container,
-        isDarkTheme && styles.darkContainer,
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        isDarkTheme ? styles.darkSafeArea : styles.lightSafeArea,
       ]}
     >
-      <Text
-        style={[styles.header, { fontSize }, isDarkTheme && styles.darkText]}
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContainer,
+          isDarkTheme && styles.darkScrollContainer,
+        ]}
       >
-        Add Health Log
-      </Text>
-      {pets.length > 0 && (
-        <RNPickerSelect
-          onValueChange={(value) => setSelectedPetId(value)}
-          items={pets.map((pet) => ({
-            label: pet.name,
-            value: pet.id,
-          }))}
-          placeholder={{ label: "Select a pet", value: null }}
-          style={pickerSelectStyles}
-        />
-      )}
-      <TouchableOpacity
-        style={styles.dateButton}
-        onPress={() => setShowDatePicker(true)}
-      >
-        <Text style={[styles.dateButtonText, { fontSize }]}>
-          Choose Log Date: {logDate.toLocaleDateString()}
-        </Text>
-      </TouchableOpacity>
-      {showDatePicker && (
-        <DateTimePicker
-          value={logDate}
-          mode="date"
-          display="default"
-          onChange={(event, selectedDate) => {
-            setShowDatePicker(false);
-            if (selectedDate) {
-              setLogDate(selectedDate);
-            }
-          }}
-        />
-      )}
-      <TextInput
-        placeholder="Details"
-        value={details}
-        onChangeText={setDetails}
-        style={[styles.input, { fontSize }]}
-        multiline
-        numberOfLines={4} // Makes it easier to type more text
-      />
-      <TouchableOpacity style={styles.button} onPress={handleAddHealthLog}>
-        <Text style={styles.buttonText}>Add Health Log</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <View style={[styles.container, isDarkTheme && styles.darkContainer]}>
+          <Text
+            style={[
+              styles.header,
+              { fontSize },
+              isDarkTheme && styles.darkText,
+            ]}
+          >
+            Add Health Log
+          </Text>
+          {pets.length > 0 && (
+            <RNPickerSelect
+              onValueChange={(value) => setSelectedPetId(value)}
+              items={pets.map((pet) => ({
+                label: pet.name,
+                value: pet.id,
+              }))}
+              placeholder={{ label: "Select a pet", value: null }}
+              style={pickerSelectStyles}
+            />
+          )}
+          <TouchableOpacity
+            style={styles.dateButton}
+            onPress={showDatePickerModal}
+          >
+            <Text style={[styles.dateButtonText, { fontSize }]}>
+              Select Log Date: {logDate.toLocaleDateString()}
+            </Text>
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              value={logDate}
+              mode="date"
+              display="default"
+              onChange={onDateChange}
+            />
+          )}
+          <TextInput
+            placeholder="Details"
+            value={details}
+            onChangeText={setDetails}
+            style={[
+              styles.input,
+              { fontSize },
+              isDarkTheme && styles.darkInput,
+            ]}
+            multiline
+            numberOfLines={4}
+            placeholderTextColor={isDarkTheme ? "#ccc" : "#aaa"}
+          />
+          <TouchableOpacity style={styles.button} onPress={handleAddHealthLog}>
+            <Text style={[styles.buttonText, { fontSize }]}>
+              Add Health Log
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    padding: 20,
-    justifyContent: "center",
+  },
+  lightSafeArea: {
     backgroundColor: "#f0f0f0",
+  },
+  darkSafeArea: {
+    backgroundColor: "#000",
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  darkScrollContainer: {
+    backgroundColor: "#333",
+  },
+  container: {
+    width: "100%",
+    maxWidth: 400,
+    padding: 20,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 10,
   },
   darkContainer: {
     backgroundColor: "#333",
@@ -155,21 +200,6 @@ const styles = StyleSheet.create({
   darkText: {
     color: "#fff",
   },
-  picker: {
-    marginBottom: 20,
-  },
-  dateButton: {
-    backgroundColor: "#007bff",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  dateButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
   input: {
     height: 100,
     borderColor: "#ccc",
@@ -180,11 +210,32 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     marginBottom: 20,
   },
-  button: {
-    backgroundColor: "#28a745",
+  darkInput: {
+    borderColor: "#555",
+    backgroundColor: "#444",
+    color: "#fff",
+  },
+  picker: {
+    marginBottom: 20,
+  },
+  dateButton: {
     padding: 15,
+    backgroundColor: "#007bff",
     borderRadius: 10,
     alignItems: "center",
+    marginBottom: 20,
+  },
+  dateButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  button: {
+    padding: 15,
+    backgroundColor: "#28a745",
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 20,
   },
   buttonText: {
     color: "#fff",

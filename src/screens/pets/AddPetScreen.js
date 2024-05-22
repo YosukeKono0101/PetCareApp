@@ -27,6 +27,11 @@ const AddPetScreen = ({ navigation }) => {
   const isDarkTheme = theme === "dark";
 
   const handleAddPet = async () => {
+    if (!name || !type || !gender || !breed || !age || !weight) {
+      Alert.alert("Error", "Please fill in all the fields.");
+      return;
+    }
+
     const petData = {
       name,
       type,
@@ -36,6 +41,7 @@ const AddPetScreen = ({ navigation }) => {
       weight,
       birthDate: birthDate.toISOString(),
     };
+
     try {
       const token = await AsyncStorage.getItem("token");
       const response = await fetch("http://192.168.1.39:3000/pets", {
@@ -88,15 +94,6 @@ const AddPetScreen = ({ navigation }) => {
         ]}
       >
         <View style={[styles.container, isDarkTheme && styles.darkContainer]}>
-          {/* <Text
-            style={[
-              styles.header,
-              { fontSize },
-              isDarkTheme && styles.darkText,
-            ]}
-          >
-            Add New Pet
-          </Text> */}
           <TextInput
             placeholder="Pet Name"
             value={name}
@@ -183,7 +180,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   darkScrollContainer: {
-    backgroundColor: "#000",
+    backgroundColor: "#333",
   },
   container: {
     width: "100%",
