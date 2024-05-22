@@ -330,16 +330,15 @@ app.get("/health-logs/:id", verifyToken, async (req, res) => {
 // update health log by id from the database
 app.put("/health-logs/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
-  const { pet_id, log_date, details } = req.body;
+  const { log_date, details } = req.body;
   const query = `
     UPDATE health_logs
-    SET pet_id = ?, log_date = ?, details = ?
+    SET log_date = ?, details = ?
     WHERE id = ? AND user_id = ?`;
 
   try {
     const [results] = await connection.execute(query, [
-      pet_id,
-      log_date,
+      new Date(log_date),
       details,
       id,
       req.userId,
@@ -396,7 +395,7 @@ app.post("/vaccination", verifyToken, async (req, res) => {
     const [results] = await connection.execute(query, [
       pet_id,
       vaccine_name,
-      vaccination_date,
+      new Date(vaccination_date),
       req.userId,
     ]);
     res.send({
@@ -431,7 +430,12 @@ app.get("/vaccination", verifyToken, async (req, res) => {
 // get a specific vaccination by id from the database
 app.get("/vaccination/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
-  const query = "SELECT * FROM vaccinations WHERE id = ? AND user_id = ?";
+  const query = `
+    SELECT v.*, p.name AS pet_name
+    FROM vaccinations v
+    JOIN pets p ON v.pet_id = p.id
+    WHERE v.id = ? AND v.user_id = ?
+  `;
 
   try {
     const [results] = await connection.execute(query, [id, req.userId]);
@@ -450,7 +454,7 @@ app.get("/vaccination/:id", verifyToken, async (req, res) => {
     res.status(500).send({
       status: "error",
       message: "Failed to retrieve vaccination",
-      error: error,
+      error: error.message,
     });
   }
 });
@@ -458,14 +462,13 @@ app.get("/vaccination/:id", verifyToken, async (req, res) => {
 // update vaccination from the database
 app.put("/vaccination/:id", verifyToken, async (req, res) => {
   const { id } = req.params;
-  const { pet_id, vaccine_name, vaccination_date } = req.body;
+  const { vaccine_name, vaccination_date } = req.body;
   const query =
-    "UPDATE vaccinations SET pet_id = ?, vaccine_name = ?, vaccination_date = ? WHERE id = ? AND user_id = ?";
+    "UPDATE vaccinations SET vaccine_name = ?, vaccination_date = ? WHERE id = ? AND user_id = ?";
   try {
     const [results] = await connection.execute(query, [
-      pet_id,
       vaccine_name,
-      vaccination_date,
+      new Date(vaccination_date),
       id,
       req.userId,
     ]);
