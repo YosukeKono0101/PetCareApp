@@ -3,7 +3,6 @@ import React, { useState, useContext } from "react";
 import {
   View,
   Text,
-  Button,
   StyleSheet,
   ScrollView,
   ActivityIndicator,
@@ -146,15 +145,25 @@ const HomeScreen = ({ navigation }) => {
           Your Pets
         </Text>
         {pets.length === 0 ? (
-          <Text
-            style={[
-              styles.noPetsText,
-              { fontSize },
-              isDarkTheme && styles.darkText,
-            ]}
-          >
-            No pets added yet.
-          </Text>
+          <View style={styles.noPetsContainer}>
+            <Image
+              source={
+                isDarkTheme
+                  ? require("../../assets/pets_dark.png")
+                  : require("../../assets/pets_white.png")
+              }
+              style={styles.noPetsImage}
+            />
+            <Text
+              style={[
+                styles.noPetsText,
+                { fontSize },
+                isDarkTheme && styles.darkText,
+              ]}
+            >
+              No pets added yet.
+            </Text>
+          </View>
         ) : (
           pets.map((pet) => (
             <View
@@ -275,12 +284,20 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: "#333",
   },
+  noPetsContainer: {
+    alignItems: "center",
+    marginTop: 20,
+  },
+  noPetsImage: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
+  },
   noPetsText: {
     fontSize: 18,
     fontStyle: "italic",
     color: "#666",
     textAlign: "center",
-    marginTop: 20,
   },
   petCard: {
     flexDirection: "row",
