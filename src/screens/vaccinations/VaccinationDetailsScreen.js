@@ -1,28 +1,32 @@
-import React, { useState, useEffect, useContext } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-  TouchableOpacity,
-} from "react-native";
+import React, { useState, useContext } from "react";
+import { Text, StyleSheet, Alert, ActivityIndicator, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SettingsContext } from "../../context/SettingsContext";
+import Button from "../../components/Button";
+import Container from "../../components/Container";
 
+// VaccinationDetailsScreen component
 const VaccinationDetailsScreen = ({ route, navigation }) => {
   const { vaccinationId } = route.params;
   const { fontSize, theme } = useContext(SettingsContext);
   const [vaccinationDetails, setVaccinationDetails] = useState(null);
-
   const isDarkTheme = theme === "dark";
 
+  // Fetch the vaccination details from the server
   useFocusEffect(
     React.useCallback(() => {
       const fetchVaccinationDetails = async () => {
         try {
           const token = await AsyncStorage.getItem("token");
+          const cachedDetails = await AsyncStorage.getItem(
+            `vaccination-${vaccinationId}`
+          );
+
+          if (cachedDetails) {
+            setVaccinationDetails(JSON.parse(cachedDetails));
+          }
+
           const response = await fetch(
             `http://192.168.1.39:3000/vaccination/${vaccinationId}`,
             {
@@ -31,9 +35,18 @@ const VaccinationDetailsScreen = ({ route, navigation }) => {
               },
             }
           );
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch from server");
+          }
+
           const json = await response.json();
           if (response.ok) {
             setVaccinationDetails(json.data);
+            await AsyncStorage.setItem(
+              `vaccination-${vaccinationId}`,
+              JSON.stringify(json.data)
+            );
           } else {
             throw new Error(
               json.message || "Unable to fetch vaccination details"
@@ -49,6 +62,7 @@ const VaccinationDetailsScreen = ({ route, navigation }) => {
     }, [vaccinationId])
   );
 
+  // Delete the vaccination record from the server
   const handleDeleteVaccination = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
@@ -63,6 +77,7 @@ const VaccinationDetailsScreen = ({ route, navigation }) => {
       );
       const json = await response.json();
       if (response.ok) {
+        await AsyncStorage.removeItem(`vaccination-${vaccinationId}`);
         Alert.alert("Success", "Vaccination deleted successfully", [
           { text: "OK", onPress: () => navigation.goBack() },
         ]);
@@ -74,6 +89,7 @@ const VaccinationDetailsScreen = ({ route, navigation }) => {
     }
   };
 
+  // Show a loading indicator while fetching the vaccination details
   if (!vaccinationDetails) {
     return (
       <View style={styles.loaderContainer}>
@@ -83,74 +99,68 @@ const VaccinationDetailsScreen = ({ route, navigation }) => {
   }
 
   return (
-    <View style={[styles.container, isDarkTheme && styles.darkContainer]}>
-      <Text
-        style={[styles.title, { fontSize }, isDarkTheme && styles.darkText]}
-      >
-        Vaccination Details
-      </Text>
-      <Text
-        style={[
-          styles.detailText,
-          { fontSize },
-          isDarkTheme && styles.darkText,
-        ]}
-      >
-        Pet: {vaccinationDetails.pet_name}
-      </Text>
-      <Text
-        style={[
-          styles.detailText,
-          { fontSize },
-          isDarkTheme && styles.darkText,
-        ]}
-      >
-        Vaccine Name: {vaccinationDetails.vaccine_name}
-      </Text>
-      <Text
-        style={[
-          styles.detailText,
-          { fontSize },
-          isDarkTheme && styles.darkText,
-        ]}
-      >
-        Vaccination Date:{" "}
-        {new Date(vaccinationDetails.vaccination_date).toLocaleDateString()}
-      </Text>
-      <TouchableOpacity
-        style={styles.button}
+    <Container isDarkTheme={isDarkTheme}>
+      <View style={styles.content}>
+        <Text
+          style={[styles.title, { fontSize }, isDarkTheme && styles.darkText]}
+        >
+          Vaccination Details
+        </Text>
+        <Text
+          style={[
+            styles.detailText,
+            { fontSize },
+            isDarkTheme && styles.darkText,
+          ]}
+        >
+          Pet: {vaccinationDetails.pet_name}
+        </Text>
+        <Text
+          style={[
+            styles.detailText,
+            { fontSize },
+            isDarkTheme && styles.darkText,
+          ]}
+        >
+          Vaccine Name: {vaccinationDetails.vaccine_name}
+        </Text>
+        <Text
+          style={[
+            styles.detailText,
+            { fontSize },
+            isDarkTheme && styles.darkText,
+          ]}
+        >
+          Vaccination Date:{" "}
+          {new Date(vaccinationDetails.vaccination_date).toLocaleDateString()}
+        </Text>
+      </View>
+      <Button
         onPress={() =>
           navigation.navigate("EditVaccinationRecord", { vaccinationId })
         }
-      >
-        <Text style={styles.buttonText}>Edit Vaccination</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.button, styles.deleteButton]}
+        title="Edit Vaccination"
+        color="#007bff"
+      />
+      <Button
         onPress={handleDeleteVaccination}
-      >
-        <Text style={styles.buttonText}>Delete Vaccination</Text>
-      </TouchableOpacity>
-    </View>
+        title="Delete Vaccination"
+        color="#ff4444"
+      />
+    </Container>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f0f0f0",
-  },
-  darkContainer: {
-    backgroundColor: "#333",
-  },
   loaderContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#f0f0f0",
+  },
+  content: {
+    justifyContent: "center",
+    alignItems: "center",
   },
   title: {
     fontSize: 28,
@@ -165,22 +175,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#333",
     marginVertical: 5,
-  },
-  button: {
-    backgroundColor: "#007bff",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 20,
-    width: "80%",
-  },
-  deleteButton: {
-    backgroundColor: "#ff4444",
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 15,
-    fontWeight: "bold",
   },
 });
 

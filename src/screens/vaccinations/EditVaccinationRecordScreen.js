@@ -1,31 +1,37 @@
 import React, { useState, useEffect, useContext } from "react";
-import {
-  View,
-  TextInput,
-  Alert,
-  StyleSheet,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-} from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SettingsContext } from "../../context/SettingsContext";
+import InputField from "../../components/InputField";
+import DatePickerField from "../../components/DatePickerField";
+import Button from "../../components/Button";
+import Container from "../../components/Container";
 
+// Edit the vaccination record
 const EditVaccinationRecordScreen = ({ route, navigation }) => {
   const { vaccinationId } = route.params;
-  const { fontSize, theme } = useContext(SettingsContext);
-  const [vaccineName, setVaccineName] = useState(new Date());
+  const [vaccineName, setVaccineName] = useState("");
   const [vaccinationDate, setVaccinationDate] = useState(new Date());
   const [petName, setPetName] = useState("");
-  const [showDatePicker, setShowDatePicker] = useState(false);
-
+  const { fontSize, theme } = useContext(SettingsContext);
   const isDarkTheme = theme === "dark";
 
+  // Fetch the vaccination details from the server
   useEffect(() => {
     const fetchVaccinationDetails = async () => {
       try {
         const token = await AsyncStorage.getItem("token");
+        const cachedDetails = await AsyncStorage.getItem(
+          `vaccination-${vaccinationId}`
+        );
+
+        if (cachedDetails) {
+          const cachedData = JSON.parse(cachedDetails);
+          setVaccineName(cachedData.vaccine_name);
+          setVaccinationDate(new Date(cachedData.vaccination_date));
+          setPetName(cachedData.pet_name);
+        }
+
         const response = await fetch(
           `http://192.168.1.39:3000/vaccination/${vaccinationId}`,
           {
@@ -34,10 +40,21 @@ const EditVaccinationRecordScreen = ({ route, navigation }) => {
             },
           }
         );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch from server");
+        }
+
         const json = await response.json();
-        setVaccineName(json.data.vaccine_name);
-        setVaccinationDate(new Date(json.data.vaccination_date));
-        setPetName(json.data.pet_name);
+        if (json) {
+          setVaccineName(json.data.vaccine_name);
+          setVaccinationDate(new Date(json.data.vaccination_date));
+          setPetName(json.data.pet_name);
+          await AsyncStorage.setItem(
+            `vaccination-${vaccinationId}`,
+            JSON.stringify(json.data)
+          );
+        }
       } catch (error) {
         Alert.alert("Error", "Could not load vaccination details.");
       }
@@ -63,7 +80,17 @@ const EditVaccinationRecordScreen = ({ route, navigation }) => {
           }),
         }
       );
+
       if (response.ok) {
+        const updatedVaccination = {
+          id: vaccinationId,
+          vaccine_name: vaccineName,
+          vaccination_date: vaccinationDate.toISOString(),
+        };
+        await AsyncStorage.setItem(
+          `vaccination-${vaccinationId}`,
+          JSON.stringify(updatedVaccination)
+        );
         Alert.alert("Success", "Vaccination updated successfully", [
           { text: "OK", onPress: () => navigation.goBack() },
         ]);
@@ -76,123 +103,28 @@ const EditVaccinationRecordScreen = ({ route, navigation }) => {
     }
   };
 
-  const onDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || vaccinationDate;
-    setShowDatePicker(false);
-    setVaccinationDate(currentDate);
-  };
-
   return (
-    <ScrollView
-      contentContainerStyle={[
-        styles.container,
-        isDarkTheme && styles.darkContainer,
-      ]}
-    >
-      <Text
-        style={[styles.title, { fontSize }, isDarkTheme && styles.darkText]}
-      >
-        Edit Vaccination Record
-      </Text>
-      <Text
-        style={[styles.subtitle, { fontSize }, isDarkTheme && styles.darkText]}
-      >
-        Pet: {petName}
-      </Text>
-      <TextInput
-        placeholder="Vaccine Name"
+    <Container isDarkTheme={isDarkTheme}>
+      <InputField
         value={vaccineName}
         onChangeText={setVaccineName}
-        style={[styles.input, { fontSize }, isDarkTheme && styles.darkInput]}
-        placeholderTextColor={isDarkTheme ? "#ccc" : "#aaa"}
+        placeholder="Vaccine Name"
+        isDarkTheme={isDarkTheme}
+        fontSize={fontSize}
       />
-      <TouchableOpacity
-        style={styles.dateButton}
-        onPress={() => setShowDatePicker(true)}
-      >
-        <Text style={[styles.dateButtonText, { fontSize }]}>
-          Select Vaccination Date: {vaccinationDate.toLocaleDateString()}
-        </Text>
-      </TouchableOpacity>
-      {showDatePicker && (
-        <DateTimePicker
-          value={vaccinationDate}
-          mode="date"
-          display="default"
-          onChange={onDateChange}
-        />
-      )}
-      <TouchableOpacity style={styles.button} onPress={handleUpdateVaccination}>
-        <Text style={styles.buttonText}>Update Vaccination</Text>
-      </TouchableOpacity>
-    </ScrollView>
+      <DatePickerField
+        date={vaccinationDate}
+        setDate={setVaccinationDate}
+        isDarkTheme={isDarkTheme}
+        fontSize={fontSize}
+      />
+      <Button
+        onPress={handleUpdateVaccination}
+        title="Update Vaccination"
+        color="#28a745"
+      />
+    </Container>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    padding: 20,
-    justifyContent: "center",
-    backgroundColor: "#f0f0f0",
-  },
-  darkContainer: {
-    backgroundColor: "#333",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-    color: "#333",
-  },
-  subtitle: {
-    fontSize: 20,
-    marginBottom: 10,
-    textAlign: "center",
-    color: "#555",
-  },
-  darkText: {
-    color: "#fff",
-  },
-  darkInput: {
-    borderColor: "#555",
-    backgroundColor: "#444",
-    color: "#fff",
-  },
-  input: {
-    height: 50,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    marginBottom: 20,
-    backgroundColor: "#fff",
-  },
-  dateButton: {
-    backgroundColor: "#007bff",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  dateButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  button: {
-    backgroundColor: "#28a745",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 20,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-});
 
 export default EditVaccinationRecordScreen;

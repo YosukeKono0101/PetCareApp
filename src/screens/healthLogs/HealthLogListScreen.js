@@ -14,23 +14,35 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SettingsContext } from "../../context/SettingsContext";
 
+// HealthLogListScreen component
 const HealthLogListScreen = ({ navigation }) => {
   const { fontSize, theme } = useContext(SettingsContext);
   const [healthLogs, setHealthLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-
   const isDarkTheme = theme === "dark";
 
+  // Fetch health logs from the server
   useFocusEffect(
     useCallback(() => {
       const fetchHealthLogs = async () => {
         try {
           const token = await AsyncStorage.getItem("token");
+          const cachedHealthLogs = await AsyncStorage.getItem("healthLogs");
+
+          if (cachedHealthLogs) {
+            setHealthLogs(JSON.parse(cachedHealthLogs));
+          }
+
           const response = await fetch("http://192.168.1.39:3000/health-logs", {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           });
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch from server");
+          }
+
           const json = await response.json();
           if (Array.isArray(json)) {
             const formattedLogs = json.map((log) => ({
@@ -38,11 +50,26 @@ const HealthLogListScreen = ({ navigation }) => {
               log_date: new Date(log.log_date).toLocaleDateString(),
             }));
             setHealthLogs(formattedLogs);
+            await AsyncStorage.setItem(
+              "healthLogs",
+              JSON.stringify(formattedLogs)
+            );
           } else {
             throw new Error("Fetched data is not an array");
           }
         } catch (error) {
-          Alert.alert("Error", error.message || "Failed to fetch health logs");
+          console.error("Network request failed:", error);
+          Alert.alert(
+            "Network Error",
+            "Failed to fetch health logs. Please check your network connection."
+          );
+          // Fallback to AsyncStorage if server fails
+          const cachedHealthLogs = await AsyncStorage.getItem("healthLogs");
+          if (cachedHealthLogs) {
+            setHealthLogs(JSON.parse(cachedHealthLogs));
+          } else {
+            setHealthLogs([]);
+          }
         } finally {
           setIsLoading(false);
         }
@@ -52,6 +79,7 @@ const HealthLogListScreen = ({ navigation }) => {
     }, [])
   );
 
+  // Display a loading indicator while fetching health logs
   if (isLoading) {
     return (
       <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />

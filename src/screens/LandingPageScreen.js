@@ -2,6 +2,7 @@ import React, { useContext } from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { SettingsContext } from "../context/SettingsContext";
 
+// LandingPageScreen component
 const LandingPageScreen = ({ navigation }) => {
   const { theme } = useContext(SettingsContext);
   const isDarkTheme = theme === "dark";

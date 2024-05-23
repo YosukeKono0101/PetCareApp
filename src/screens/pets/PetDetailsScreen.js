@@ -1,29 +1,38 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
-  View,
   Text,
   Image,
   StyleSheet,
   Alert,
   ActivityIndicator,
-  TouchableOpacity,
+  View,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SettingsContext } from "../../context/SettingsContext";
+import Button from "../../components/Button";
+import Container from "../../components/Container";
 
+// PetDetailsScreen component
 const PetDetailsScreen = ({ route, navigation }) => {
   const { petId } = route.params;
   const [petDetails, setPetDetails] = useState(null);
   const { fontSize, theme } = useContext(SettingsContext);
-
   const isDarkTheme = theme === "dark";
 
-  useFocusEffect(
-    React.useCallback(() => {
-      const fetchPetDetails = async () => {
-        try {
-          const token = await AsyncStorage.getItem("token");
+  // Fetch the pet details from the server
+  useEffect(() => {
+    const fetchPetDetails = async () => {
+      try {
+        const token = await AsyncStorage.getItem("token");
+
+        // Check if pet details are available in AsyncStorage
+        const cachedPetDetails = await AsyncStorage.getItem(`pet-${petId}`);
+        if (cachedPetDetails) {
+          console.log("Fetching data from AsyncStorage");
+          setPetDetails(JSON.parse(cachedPetDetails));
+        } else {
+          console.log("Fetching data from the server");
           const response = await fetch(
             `http://192.168.1.39:3000/pets/${petId}`,
             {
@@ -32,29 +41,30 @@ const PetDetailsScreen = ({ route, navigation }) => {
               },
             }
           );
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch from server");
+          }
+
           const json = await response.json();
+          // Update the state with the pet details
           if (response.ok) {
-            setPetDetails({
-              ...json,
-              gender: json.gender || "Not available",
-              breed: json.breed || "Not available",
-              age: json.age || "Not available",
-              weight: json.weight ? `${json.weight} kg` : "Not available",
-              birthDate: json.birthDate || "Not available",
-            });
+            setPetDetails(json);
+            await AsyncStorage.setItem(`pet-${petId}`, JSON.stringify(json));
           } else {
             throw new Error(json.message || "Unable to fetch data");
           }
-        } catch (error) {
-          Alert.alert("Error", error.message);
-          setPetDetails(null);
         }
-      };
+      } catch (error) {
+        Alert.alert("Error", error.message);
+        setPetDetails(null);
+      }
+    };
 
-      fetchPetDetails();
-    }, [petId])
-  );
+    fetchPetDetails();
+  }, [petId]);
 
+  // Handle the deletion of the pet
   const handleDeletePet = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
@@ -65,7 +75,9 @@ const PetDetailsScreen = ({ route, navigation }) => {
         },
       });
       const json = await response.json();
+      // Show an alert if the pet was deleted successfully
       if (response.ok) {
+        await AsyncStorage.removeItem(`pet-${petId}`);
         Alert.alert("Success", "Pet deleted successfully", [
           { text: "OK", onPress: () => navigation.goBack() },
         ]);
@@ -77,6 +89,7 @@ const PetDetailsScreen = ({ route, navigation }) => {
     }
   };
 
+  // Show a loading indicator while fetching the pet details
   if (!petDetails) {
     return (
       <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
@@ -84,95 +97,89 @@ const PetDetailsScreen = ({ route, navigation }) => {
   }
 
   return (
-    <View style={[styles.container, isDarkTheme && styles.darkContainer]}>
-      <Image
-        source={require("../../../assets/pet_icon.jpeg")}
-        style={styles.image}
-      />
-      <Text
-        style={[styles.title, { fontSize }, isDarkTheme && styles.darkText]}
-      >
-        {petDetails.name}
-      </Text>
-      <Text
-        style={[
-          styles.detailText,
-          { fontSize },
-          isDarkTheme && styles.darkText,
-        ]}
-      >
-        Type: {petDetails.type}
-      </Text>
-      <Text
-        style={[
-          styles.detailText,
-          { fontSize },
-          isDarkTheme && styles.darkText,
-        ]}
-      >
-        Gender: {petDetails.gender}
-      </Text>
-      <Text
-        style={[
-          styles.detailText,
-          { fontSize },
-          isDarkTheme && styles.darkText,
-        ]}
-      >
-        Breed: {petDetails.breed}
-      </Text>
-      <Text
-        style={[
-          styles.detailText,
-          { fontSize },
-          isDarkTheme && styles.darkText,
-        ]}
-      >
-        Age: {petDetails.age}
-      </Text>
-      <Text
-        style={[
-          styles.detailText,
-          { fontSize },
-          isDarkTheme && styles.darkText,
-        ]}
-      >
-        Weight: {petDetails.weight}
-      </Text>
-      <Text
-        style={[
-          styles.detailText,
-          { fontSize },
-          isDarkTheme && styles.darkText,
-        ]}
-      >
-        Birth Date: {petDetails.birthDate}
-      </Text>
-      <TouchableOpacity
-        style={styles.editButton}
+    <Container isDarkTheme={isDarkTheme}>
+      <View style={styles.content}>
+        <Image
+          source={require("../../../assets/pet_icon.jpeg")}
+          style={styles.image}
+        />
+        <Text
+          style={[styles.title, { fontSize }, isDarkTheme && styles.darkText]}
+        >
+          {petDetails.name}
+        </Text>
+        <Text
+          style={[
+            styles.detailText,
+            { fontSize },
+            isDarkTheme && styles.darkText,
+          ]}
+        >
+          Type: {petDetails.type}
+        </Text>
+        <Text
+          style={[
+            styles.detailText,
+            { fontSize },
+            isDarkTheme && styles.darkText,
+          ]}
+        >
+          Gender: {petDetails.gender}
+        </Text>
+        <Text
+          style={[
+            styles.detailText,
+            { fontSize },
+            isDarkTheme && styles.darkText,
+          ]}
+        >
+          Breed: {petDetails.breed}
+        </Text>
+        <Text
+          style={[
+            styles.detailText,
+            { fontSize },
+            isDarkTheme && styles.darkText,
+          ]}
+        >
+          Age: {petDetails.age}
+        </Text>
+        <Text
+          style={[
+            styles.detailText,
+            { fontSize },
+            isDarkTheme && styles.darkText,
+          ]}
+        >
+          Weight: {petDetails.weight}
+        </Text>
+        <Text
+          style={[
+            styles.detailText,
+            { fontSize },
+            isDarkTheme && styles.darkText,
+          ]}
+        >
+          Birth Date: {petDetails.birthDate}
+        </Text>
+      </View>
+      <Button
         onPress={() => navigation.navigate("EditPet", { petId })}
-      >
-        <Text style={styles.buttonText}>Edit</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.deleteButton} onPress={handleDeletePet}>
-        <Text style={styles.buttonText}>Delete</Text>
-      </TouchableOpacity>
-    </View>
+        title="Edit"
+        color="#007bff"
+      />
+      <Button onPress={handleDeletePet} title="Delete" color="#ff4444" />
+    </Container>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    alignItems: "center",
-    backgroundColor: "#f0f0f0",
-  },
-  darkContainer: {
-    backgroundColor: "#333",
-  },
   loader: {
     flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  content: {
     justifyContent: "center",
     alignItems: "center",
   },
@@ -197,27 +204,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginBottom: 5,
     color: "#555",
-  },
-  editButton: {
-    backgroundColor: "#007bff",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 20,
-    width: "80%",
-  },
-  deleteButton: {
-    backgroundColor: "#ff4444",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 10,
-    width: "80%",
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 15,
-    fontWeight: "bold",
   },
 });
 

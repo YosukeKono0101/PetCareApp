@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { SettingsContext } from "../../context/SettingsContext";
 
+// Array of open source licenses used in the app
 const licenses = [
   {
     name: "React",
@@ -20,9 +21,9 @@ const licenses = [
     license: "MIT",
     link: "https://github.com/facebook/react-native/blob/main/LICENSE",
   },
-  // Add more licenses as needed
 ];
 
+// About screen component
 const AboutScreen = () => {
   const { fontSize, theme } = useContext(SettingsContext);
   const isDarkTheme = theme === "dark";

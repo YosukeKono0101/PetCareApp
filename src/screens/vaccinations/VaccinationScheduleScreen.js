@@ -12,24 +12,37 @@ import { useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SettingsContext } from "../../context/SettingsContext";
 
+// VaccinationScheduleScreen component
 const VaccinationScheduleScreen = ({ navigation }) => {
   const { fontSize, theme } = useContext(SettingsContext);
   const [vaccinations, setVaccinations] = useState([]);
-
   const isDarkTheme = theme === "dark";
 
+  // Fetch vaccination records from the server
   useFocusEffect(
     useCallback(() => {
       const fetchVaccinations = async () => {
         try {
           const token = await AsyncStorage.getItem("token");
+          const cachedVaccinations = await AsyncStorage.getItem("vaccinations");
+
+          if (cachedVaccinations) {
+            setVaccinations(JSON.parse(cachedVaccinations));
+          }
+
           const response = await fetch("http://192.168.1.39:3000/vaccination", {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           });
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch from server");
+          }
+
           const json = await response.json();
           setVaccinations(json);
+          await AsyncStorage.setItem("vaccinations", JSON.stringify(json));
         } catch (error) {
           console.error("Failed to fetch vaccinations", error);
         }

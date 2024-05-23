@@ -12,20 +12,25 @@ import Slider from "@react-native-community/slider";
 import { SettingsContext } from "../../context/SettingsContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+// SettingsScreen component
 const SettingsScreen = ({ navigation }) => {
+  // Get the context values
   const { fontSize, theme, updateFontSize, updateTheme } =
     useContext(SettingsContext);
-
   const isDarkTheme = theme === "dark";
 
+  // Handle logout
   const handleLogout = async () => {
+    // Remove the token from AsyncStorage
     await AsyncStorage.removeItem("token");
     navigation.navigate("Login");
   };
 
+  // Check if the token is present in AsyncStorage
   useEffect(() => {
     const checkToken = async () => {
       const token = await AsyncStorage.getItem("token");
+      // If the token is not present, show an alert and navigate to the Login screen
       if (!token) {
         Alert.alert("Session expired", "Please log in again.");
         navigation.navigate("Login");

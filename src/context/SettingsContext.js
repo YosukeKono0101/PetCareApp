@@ -1,61 +1,58 @@
 import React, { createContext, useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+// Create a context for managing settings
 const SettingsContext = createContext();
 
+// SettingsProvider component to manage settings state
 const SettingsProvider = ({ children }) => {
-  const [fontSize, setFontSize] = useState(16);
-  const [theme, setTheme] = useState("light");
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [settings, setSettings] = useState({
+    fontSize: 16,
+    theme: "light",
+    notificationsEnabled: true,
+  });
 
+  // Load settings from AsyncStorage when the component mounts
   useEffect(() => {
     const loadSettings = async () => {
-      const savedFontSize = await AsyncStorage.getItem("fontSize");
-      const savedTheme = await AsyncStorage.getItem("theme");
-      const savedNotificationsEnabled = await AsyncStorage.getItem(
-        "notificationsEnabled"
-      );
-
-      if (savedFontSize) {
-        setFontSize(parseInt(savedFontSize, 10));
-      }
-
-      if (savedTheme) {
-        setTheme(savedTheme);
-      }
-
-      if (savedNotificationsEnabled !== null) {
-        setNotificationsEnabled(savedNotificationsEnabled === "true");
+      try {
+        const savedSettings = await AsyncStorage.multiGet([
+          "fontSize",
+          "theme",
+          "notificationsEnabled",
+        ]);
+        setSettings({
+          fontSize: savedSettings[0][1]
+            ? parseInt(savedSettings[0][1], 10)
+            : 16,
+          theme: savedSettings[1][1] || "light",
+          notificationsEnabled: savedSettings[2][1] === "true",
+        });
+      } catch (error) {
+        console.error("Failed to load settings:", error);
       }
     };
 
     loadSettings();
   }, []);
 
-  const updateFontSize = async (value) => {
-    setFontSize(value);
-    await AsyncStorage.setItem("fontSize", value.toString());
-  };
-
-  const updateTheme = async (value) => {
-    setTheme(value);
-    await AsyncStorage.setItem("theme", value);
-  };
-
-  const updateNotificationsEnabled = async (value) => {
-    setNotificationsEnabled(value);
-    await AsyncStorage.setItem("notificationsEnabled", value.toString());
+  // Update settings in state and AsyncStorage
+  const updateSettings = async (key, value) => {
+    setSettings((prevSettings) => ({
+      ...prevSettings,
+      [key]: value,
+    }));
+    await AsyncStorage.setItem(key, value.toString());
   };
 
   return (
     <SettingsContext.Provider
       value={{
-        fontSize,
-        theme,
-        notificationsEnabled,
-        updateFontSize,
-        updateTheme,
-        updateNotificationsEnabled,
+        ...settings,
+        updateFontSize: (value) => updateSettings("fontSize", value),
+        updateTheme: (value) => updateSettings("theme", value),
+        updateNotificationsEnabled: (value) =>
+          updateSettings("notificationsEnabled", value),
       }}
     >
       {children}

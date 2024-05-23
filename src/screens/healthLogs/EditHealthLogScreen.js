@@ -1,31 +1,37 @@
 import React, { useState, useEffect, useContext } from "react";
-import {
-  View,
-  TextInput,
-  Alert,
-  StyleSheet,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-} from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import { Alert, Text } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SettingsContext } from "../../context/SettingsContext";
+import InputField from "../../components/InputField";
+import DatePickerField from "../../components/DatePickerField";
+import Button from "../../components/Button";
+import Container from "../../components/Container";
 
+// Edit the health log entry
 const EditHealthLogScreen = ({ route, navigation }) => {
   const { logId } = route.params;
-  const { fontSize, theme } = useContext(SettingsContext);
   const [logDate, setLogDate] = useState(new Date());
   const [details, setDetails] = useState("");
   const [petName, setPetName] = useState("");
-  const [showDatePicker, setShowDatePicker] = useState(false);
-
+  const { fontSize, theme } = useContext(SettingsContext);
   const isDarkTheme = theme === "dark";
 
+  // Fetch the health log details from the server
   useEffect(() => {
     const fetchLogDetails = async () => {
       try {
         const token = await AsyncStorage.getItem("token");
+        const cachedLogDetails = await AsyncStorage.getItem(
+          `healthLog-${logId}`
+        );
+
+        if (cachedLogDetails) {
+          const logData = JSON.parse(cachedLogDetails);
+          setLogDate(new Date(logData.log_date));
+          setDetails(logData.details);
+          setPetName(logData.pet_name);
+        }
+
         const response = await fetch(
           `http://192.168.1.39:3000/health-logs/${logId}`,
           {
@@ -36,9 +42,14 @@ const EditHealthLogScreen = ({ route, navigation }) => {
         );
         const json = await response.json();
         if (response.ok) {
+          // Update the state with the health log details
           setLogDate(new Date(json.log_date));
           setDetails(json.details);
           setPetName(json.pet_name);
+          await AsyncStorage.setItem(
+            `healthLog-${logId}`,
+            JSON.stringify(json)
+          );
         } else {
           Alert.alert(
             "Error",
@@ -56,6 +67,7 @@ const EditHealthLogScreen = ({ route, navigation }) => {
     fetchLogDetails();
   }, [logId]);
 
+  // Update the health log entry on the server
   const handleUpdateLog = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
@@ -74,6 +86,15 @@ const EditHealthLogScreen = ({ route, navigation }) => {
         }
       );
       if (response.ok) {
+        const updatedLog = {
+          log_date: logDate.toISOString(),
+          details,
+          pet_name: petName,
+        };
+        await AsyncStorage.setItem(
+          `healthLog-${logId}`,
+          JSON.stringify(updatedLog)
+        );
         Alert.alert("Success", "Health log updated successfully", [
           { text: "OK", onPress: () => navigation.goBack() },
         ]);
@@ -86,118 +107,30 @@ const EditHealthLogScreen = ({ route, navigation }) => {
     }
   };
 
-  const onDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || logDate;
-    setShowDatePicker(false);
-    setLogDate(currentDate);
-  };
-
   return (
-    <ScrollView
-      contentContainerStyle={[
-        styles.container,
-        isDarkTheme && styles.darkContainer,
-      ]}
-    >
-      <Text
-        style={[styles.title, { fontSize }, isDarkTheme && styles.darkText]}
-      >
-        Edit Health Log
-      </Text>
-      <Text
-        style={[styles.petName, { fontSize }, isDarkTheme && styles.darkText]}
-      >
-        Pet: {petName}
-      </Text>
-      <TouchableOpacity
-        style={styles.dateButton}
-        onPress={() => setShowDatePicker(true)}
-      >
-        <Text style={[styles.dateButtonText, { fontSize }]}>
-          Select Log Date: {logDate.toLocaleDateString()}
-        </Text>
-      </TouchableOpacity>
-      {showDatePicker && (
-        <DateTimePicker
-          value={logDate}
-          mode="date"
-          display="default"
-          onChange={onDateChange}
-        />
-      )}
-      <TextInput
-        placeholder="Details"
+    <Container isDarkTheme={isDarkTheme}>
+      <DatePickerField
+        date={logDate}
+        setDate={setLogDate}
+        isDarkTheme={isDarkTheme}
+        fontSize={fontSize}
+      />
+      <InputField
         value={details}
         onChangeText={setDetails}
-        style={[styles.input, { fontSize }]}
+        placeholder="Details"
+        isDarkTheme={isDarkTheme}
+        fontSize={fontSize}
         multiline
+        height={100}
       />
-      <TouchableOpacity style={styles.button} onPress={handleUpdateLog}>
-        <Text style={styles.buttonText}>Update Health Log</Text>
-      </TouchableOpacity>
-    </ScrollView>
+      <Button
+        onPress={handleUpdateLog}
+        title="Update Health Log"
+        color="#28a745"
+      />
+    </Container>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    padding: 20,
-    justifyContent: "center",
-    backgroundColor: "#f0f0f0",
-  },
-  darkContainer: {
-    backgroundColor: "#333",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-    color: "#333",
-  },
-  darkText: {
-    color: "#fff",
-  },
-  petName: {
-    fontSize: 20,
-    marginBottom: 10,
-    textAlign: "center",
-    color: "#555",
-  },
-  dateButton: {
-    backgroundColor: "#007bff",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  dateButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  input: {
-    height: 100,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    textAlignVertical: "top",
-    backgroundColor: "#fff",
-    marginBottom: 20,
-  },
-  button: {
-    backgroundColor: "#28a745",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-});
 
 export default EditHealthLogScreen;

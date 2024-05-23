@@ -34,9 +34,21 @@ import EditVaccinationRecordScreen from "../screens/vaccinations/EditVaccination
 import SettingsScreen from "../screens/settings/SettingsScreen";
 import AboutScreen from "../screens/about/AboutScreen";
 
+// App Navigator
 const Stack = createNativeStackNavigator();
+// Home Tabs
 const Tab = createBottomTabNavigator();
 
+// Tab Screen Options
+const tabScreenOptions = (label, icon) => ({
+  tabBarLabel: label,
+  headerShown: false,
+  tabBarIcon: ({ color, size }) => (
+    <FontAwesomeIcon icon={icon} color={color} size={size} />
+  ),
+});
+
+// Home Tabs
 function HomeTabs() {
   const { theme } = useContext(SettingsContext);
   const isDarkTheme = theme === "dark";
@@ -44,86 +56,50 @@ function HomeTabs() {
   return (
     <Tab.Navigator
       screenOptions={{
-        tabBarStyle: {
-          backgroundColor: isDarkTheme ? "black" : "#fff",
-        },
-        tabBarLabelStyle: {
-          color: isDarkTheme ? "#fff" : "black",
-        },
-        tabBarIconStyle: {
-          color: isDarkTheme ? "#fff" : "bla",
-        },
+        tabBarStyle: { backgroundColor: isDarkTheme ? "black" : "#fff" },
+        tabBarLabelStyle: { color: isDarkTheme ? "#fff" : "black" },
+        tabBarIconStyle: { color: isDarkTheme ? "#fff" : "black" },
       }}
     >
       <Tab.Screen
         name="Home"
         component={HomeScreen}
-        options={{
-          tabBarLabel: "Home",
-          headerShown: false,
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesomeIcon icon={faHouse} color={color} size={size} />
-          ),
-        }}
+        options={tabScreenOptions("Home", faHouse)}
       />
       <Tab.Screen
         name="PetList"
         component={PetListScreen}
-        options={{
-          tabBarLabel: "Your Pets",
-          headerShown: false,
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesomeIcon icon={faPaw} color={color} size={size} />
-          ),
-        }}
+        options={tabScreenOptions("Your Pets", faPaw)}
       />
       <Tab.Screen
         name="HealthLogList"
         component={HealthLogListScreen}
-        options={{
-          tabBarLabel: "Health Logs",
-          headerShown: false,
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesomeIcon icon={faBookMedical} color={color} size={size} />
-          ),
-        }}
+        options={tabScreenOptions("Health Logs", faBookMedical)}
       />
       <Tab.Screen
         name="VaccinationSchedule"
         component={VaccinationScheduleScreen}
-        options={{
-          tabBarLabel: "Vaccines",
-          headerShown: false,
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesomeIcon icon={faSyringe} color={color} size={size} />
-          ),
-        }}
+        options={tabScreenOptions("Vaccines", faSyringe)}
       />
       <Tab.Screen
         name="Settings"
         component={SettingsScreen}
-        options={{
-          tabBarLabel: "Settings",
-          headerShown: false,
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesomeIcon icon={faCog} color={color} size={size} />
-          ),
-        }}
+        options={tabScreenOptions("Settings", faCog)}
       />
     </Tab.Navigator>
   );
 }
 
+// App Navigator
 function AppNavigator() {
   const { theme } = useContext(SettingsContext);
   const isDarkTheme = theme === "dark";
+
   return (
     <Stack.Navigator
       initialRouteName="LandingPage"
       screenOptions={{
-        headerStyle: {
-          backgroundColor: isDarkTheme ? "#000" : "#fff",
-        },
+        headerStyle: { backgroundColor: isDarkTheme ? "#000" : "#fff" },
         headerTintColor: isDarkTheme ? "#fff" : "#000",
       }}
     >

@@ -1,42 +1,48 @@
-import { useFocusEffect } from "@react-navigation/native";
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useCallback } from "react";
 import {
-  View,
   Text,
   StyleSheet,
-  ScrollView,
   ActivityIndicator,
   Image,
   TouchableOpacity,
   SafeAreaView,
+  ScrollView,
+  View,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 import { SettingsContext } from "../context/SettingsContext";
 
+// HomeScreen component
 const HomeScreen = ({ navigation }) => {
   const [pets, setPets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const { fontSize, theme } = useContext(SettingsContext);
-
   const isDarkTheme = theme === "dark";
 
+  // Fetch pets from the server
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       const fetchPets = async () => {
         try {
           const token = await AsyncStorage.getItem("token");
-          const response = await fetch("http://192.168.1.39:3000/pets", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          const json = await response.json();
-          if (Array.isArray(json)) {
-            setPets(json);
-          } else {
-            console.error("Fetched data is not an array:", json);
-            setPets([]);
+          const cachedPets = await AsyncStorage.getItem("pets");
+
+          if (cachedPets) {
+            setPets(JSON.parse(cachedPets));
           }
+
+          const response = await fetch("http://192.168.1.39:3000/pets", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch from server");
+          }
+
+          const json = await response.json();
+          setPets(Array.isArray(json) ? json : []);
+          await AsyncStorage.setItem("pets", JSON.stringify(json));
         } catch (error) {
           console.error("Failed to fetch pets:", error);
         } finally {
@@ -48,6 +54,7 @@ const HomeScreen = ({ navigation }) => {
     }, [])
   );
 
+  // Display a loading indicator while fetching pets
   if (isLoading) {
     return (
       <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
@@ -68,72 +75,46 @@ const HomeScreen = ({ navigation }) => {
           Welcome to Pet Care App
         </Text>
         <View style={styles.quickLinks}>
-          <TouchableOpacity
-            style={[styles.linkCard, isDarkTheme && styles.darkCard]}
-            onPress={() => navigation.navigate("PetList")}
-          >
-            <Image
-              source={
-                isDarkTheme
-                  ? require("../../assets/dog_dark.png")
-                  : require("../../assets/dog_white.png")
-              }
-              style={styles.linkImage}
-            />
-            <Text
-              style={[
-                styles.linkText,
-                { fontSize },
-                isDarkTheme && styles.darkText,
-              ]}
+          {[
+            {
+              label: "Your Pets",
+              screen: "PetList",
+              image: isDarkTheme
+                ? require("../../assets/dog_dark.png")
+                : require("../../assets/dog_white.png"),
+            },
+            {
+              label: "Health Logs",
+              screen: "HealthLogList",
+              image: isDarkTheme
+                ? require("../../assets/health_log_dark.png")
+                : require("../../assets/health_log_white.png"),
+            },
+            {
+              label: "Vaccines",
+              screen: "VaccinationSchedule",
+              image: isDarkTheme
+                ? require("../../assets/vaccine_dark.png")
+                : require("../../assets/vaccine_white.png"),
+            },
+          ].map((link, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[styles.linkCard, isDarkTheme && styles.darkCard]}
+              onPress={() => navigation.navigate(link.screen)}
             >
-              Your Pets
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.linkCard, isDarkTheme && styles.darkCard]}
-            onPress={() => navigation.navigate("HealthLogList")}
-          >
-            <Image
-              source={
-                isDarkTheme
-                  ? require("../../assets/health_log_dark.png")
-                  : require("../../assets/health_log_white.png")
-              }
-              style={styles.linkImage}
-            />
-            <Text
-              style={[
-                styles.linkText,
-                { fontSize },
-                isDarkTheme && styles.darkText,
-              ]}
-            >
-              Health Logs
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.linkCard, isDarkTheme && styles.darkCard]}
-            onPress={() => navigation.navigate("VaccinationSchedule")}
-          >
-            <Image
-              source={
-                isDarkTheme
-                  ? require("../../assets/vaccine_dark.png")
-                  : require("../../assets/vaccine_white.png")
-              }
-              style={styles.linkImage}
-            />
-            <Text
-              style={[
-                styles.linkText,
-                { fontSize },
-                isDarkTheme && styles.darkText,
-              ]}
-            >
-              Vaccines
-            </Text>
-          </TouchableOpacity>
+              <Image source={link.image} style={styles.linkImage} />
+              <Text
+                style={[
+                  styles.linkText,
+                  { fontSize },
+                  isDarkTheme && styles.darkText,
+                ]}
+              >
+                {link.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
         <Text
           style={[

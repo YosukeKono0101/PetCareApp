@@ -13,32 +13,56 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SettingsContext } from "../../context/SettingsContext";
 
+// PetListScreen component
 const PetListScreen = ({ navigation }) => {
   const { fontSize, theme } = useContext(SettingsContext);
   const [pets, setPets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-
   const isDarkTheme = theme === "dark";
 
+  // Fetch pets from the server
   useFocusEffect(
     useCallback(() => {
       const fetchPets = async () => {
         try {
           const token = await AsyncStorage.getItem("token");
+          const cachedPets = await AsyncStorage.getItem("pets");
+
+          if (cachedPets) {
+            setPets(JSON.parse(cachedPets));
+          }
+
           const response = await fetch("http://192.168.1.39:3000/pets", {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           });
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch from server");
+          }
+
           const json = await response.json();
+          // Update the state with the fetched pets
           if (Array.isArray(json)) {
+            console.log("Fetched pets from the server");
             setPets(json);
+            await AsyncStorage.setItem("pets", JSON.stringify(json));
           } else {
             console.error("Fetched data is not an array:", json);
+            // Clear the pets array if the fetched data is not an array
             setPets([]);
           }
         } catch (error) {
           console.error("Failed to fetch pets:", error);
+          // Fallback to AsyncStorage if server fails
+          const cachedPets = await AsyncStorage.getItem("pets");
+          if (cachedPets) {
+            console.log("Fetching pets from AsyncStorage");
+            setPets(JSON.parse(cachedPets));
+          } else {
+            setPets([]);
+          }
         } finally {
           setIsLoading(false);
         }
@@ -48,6 +72,7 @@ const PetListScreen = ({ navigation }) => {
     }, [])
   );
 
+  // Display a loading indicator while fetching pets
   if (isLoading) {
     return (
       <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
