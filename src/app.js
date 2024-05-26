@@ -2,6 +2,7 @@ const express = require("express");
 const swaggerJsDoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 const dotenv = require("dotenv");
+const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
 const petsRoutes = require("./routes/petsRoutes");
 const healthLogsRoutes = require("./routes/healthLogsRoutes");
@@ -13,6 +14,9 @@ dotenv.config();
 // Create an Express application
 const app = express();
 app.use(express.json());
+
+// Enable CORS with default options
+app.use(cors());
 
 // Swagger API documentation
 const swaggerOptions = {
