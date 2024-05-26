@@ -6,6 +6,7 @@ import InputField from "../../components/InputField";
 import DatePickerField from "../../components/DatePickerField";
 import Button from "../../components/Button";
 import Container from "../../components/Container";
+import { API_URL } from "@env";
 
 // Edit the vaccination record
 const EditVaccinationRecordScreen = ({ route, navigation }) => {
@@ -33,7 +34,7 @@ const EditVaccinationRecordScreen = ({ route, navigation }) => {
         }
 
         const response = await fetch(
-          `http://192.168.1.39:3000/vaccination/${vaccinationId}`,
+          `${API_URL}/vaccination/${vaccinationId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -66,20 +67,17 @@ const EditVaccinationRecordScreen = ({ route, navigation }) => {
   const handleUpdateVaccination = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
-      const response = await fetch(
-        `http://192.168.1.39:3000/vaccination/${vaccinationId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            vaccine_name: vaccineName,
-            vaccination_date: vaccinationDate.toISOString(),
-          }),
-        }
-      );
+      const response = await fetch(`${API_URL}/vaccination/${vaccinationId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          vaccine_name: vaccineName,
+          vaccination_date: vaccinationDate.toISOString(),
+        }),
+      });
 
       if (response.ok) {
         const updatedVaccination = {

@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SettingsContext } from "../../context/SettingsContext";
+import { API_URL } from "@env";
 
 // HealthLogListScreen component
 const HealthLogListScreen = ({ navigation }) => {
@@ -33,7 +34,7 @@ const HealthLogListScreen = ({ navigation }) => {
             setHealthLogs(JSON.parse(cachedHealthLogs));
           }
 
-          const response = await fetch("http://192.168.1.39:3000/health-logs", {
+          const response = await fetch(`${API_URL}/health-logs`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -55,19 +56,22 @@ const HealthLogListScreen = ({ navigation }) => {
               JSON.stringify(formattedLogs)
             );
           } else {
-            throw new Error("Fetched data is not an array");
+            console.error("Fetched data is not an array:", json);
+            setHealthLogs([]);
           }
         } catch (error) {
           console.error("Network request failed:", error);
           Alert.alert(
             "Network Error",
-            "Failed to fetch health logs. Please check your network connection."
+            "Failed to get health logs. Please check your network connection."
           );
           // Fallback to AsyncStorage if server fails
           const cachedHealthLogs = await AsyncStorage.getItem("healthLogs");
           if (cachedHealthLogs) {
+            console.log("Fetching health logs from AsyncStorage");
             setHealthLogs(JSON.parse(cachedHealthLogs));
           } else {
+            console.log("No cached data available");
             setHealthLogs([]);
           }
         } finally {

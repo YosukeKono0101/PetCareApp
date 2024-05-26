@@ -3,6 +3,7 @@ import { TextInput, Alert, StyleSheet } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AuthScreen from "./AuthScreen";
 import { SettingsContext } from "../../context/SettingsContext";
+import { API_URL } from "@env";
 
 // SignUpScreen component
 const SignUpScreen = ({ navigation }) => {
@@ -14,7 +15,7 @@ const SignUpScreen = ({ navigation }) => {
   // handleSignUp function
   const handleSignUp = async () => {
     try {
-      const response = await fetch("http://192.168.1.39:3000/register", {
+      const response = await fetch(`${API_URL}/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

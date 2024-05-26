@@ -3,6 +3,7 @@ import { TextInput, Alert, StyleSheet } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AuthScreen from "./AuthScreen";
 import { SettingsContext } from "../../context/SettingsContext";
+import { API_URL } from "@env";
 
 // LoginScreen component
 const LoginScreen = ({ navigation }) => {
@@ -15,7 +16,7 @@ const LoginScreen = ({ navigation }) => {
   const handleLogin = async () => {
     // Fetch request to login
     try {
-      const response = await fetch("http://192.168.1.39:3000/login", {
+      const response = await fetch(`${API_URL}/login`, {
         // POST method
         method: "POST",
         headers: {

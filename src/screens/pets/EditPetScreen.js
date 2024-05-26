@@ -6,6 +6,7 @@ import InputField from "../../components/InputField";
 import DatePickerField from "../../components/DatePickerField";
 import Button from "../../components/Button";
 import Container from "../../components/Container";
+import { API_URL } from "@env";
 
 // The EditPetScreen component is used to edit an existing pet.
 const EditPetScreen = ({ route, navigation }) => {
@@ -25,7 +26,7 @@ const EditPetScreen = ({ route, navigation }) => {
     const fetchPetDetails = async () => {
       try {
         const token = await AsyncStorage.getItem("token");
-        const response = await fetch(`http://192.168.1.39:3000/pets/${petId}`, {
+        const response = await fetch(`${API_URL}/pets/${petId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -56,7 +57,7 @@ const EditPetScreen = ({ route, navigation }) => {
   const handleUpdatePet = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
-      const response = await fetch(`http://192.168.1.39:3000/pets/${petId}`, {
+      const response = await fetch(`${API_URL}/pets/${petId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

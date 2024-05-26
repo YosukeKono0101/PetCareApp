@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SettingsContext } from "../../context/SettingsContext";
+import { API_URL } from "@env";
 
 // PetListScreen component
 const PetListScreen = ({ navigation }) => {
@@ -32,7 +33,7 @@ const PetListScreen = ({ navigation }) => {
             setPets(JSON.parse(cachedPets));
           }
 
-          const response = await fetch("http://192.168.1.39:3000/pets", {
+          const response = await fetch(`${API_URL}/pets`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -54,7 +55,10 @@ const PetListScreen = ({ navigation }) => {
             setPets([]);
           }
         } catch (error) {
-          console.error("Failed to fetch pets:", error);
+          Alert.alert(
+            "Network Error",
+            "Failed to get pets. Please check your network connection."
+          );
           // Fallback to AsyncStorage if server fails
           const cachedPets = await AsyncStorage.getItem("pets");
           if (cachedPets) {

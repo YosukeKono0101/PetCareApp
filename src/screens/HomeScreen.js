@@ -12,6 +12,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { SettingsContext } from "../context/SettingsContext";
+import { API_URL } from "@env";
 
 // HomeScreen component
 const HomeScreen = ({ navigation }) => {
@@ -32,7 +33,7 @@ const HomeScreen = ({ navigation }) => {
             setPets(JSON.parse(cachedPets));
           }
 
-          const response = await fetch("http://192.168.1.39:3000/pets", {
+          const response = await fetch(`${API_URL}/pets`, {
             headers: { Authorization: `Bearer ${token}` },
           });
 

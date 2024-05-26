@@ -6,6 +6,7 @@ import InputField from "../../components/InputField";
 import DatePickerField from "../../components/DatePickerField";
 import Button from "../../components/Button";
 import Container from "../../components/Container";
+import { API_URL } from "@env";
 
 // Edit the health log entry
 const EditHealthLogScreen = ({ route, navigation }) => {
@@ -32,14 +33,11 @@ const EditHealthLogScreen = ({ route, navigation }) => {
           setPetName(logData.pet_name);
         }
 
-        const response = await fetch(
-          `http://192.168.1.39:3000/health-logs/${logId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await fetch(`${API_URL}/health-logs/${logId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         const json = await response.json();
         if (response.ok) {
           // Update the state with the health log details
@@ -71,20 +69,17 @@ const EditHealthLogScreen = ({ route, navigation }) => {
   const handleUpdateLog = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
-      const response = await fetch(
-        `http://192.168.1.39:3000/health-logs/${logId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            log_date: logDate.toISOString(),
-            details,
-          }),
-        }
-      );
+      const response = await fetch(`${API_URL}/health-logs/${logId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          log_date: logDate.toISOString(),
+          details,
+        }),
+      });
       if (response.ok) {
         const updatedLog = {
           log_date: logDate.toISOString(),

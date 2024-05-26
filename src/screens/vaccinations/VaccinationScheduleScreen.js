@@ -7,15 +7,18 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
+  ActivityIndicator,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SettingsContext } from "../../context/SettingsContext";
+import { API_URL } from "@env";
 
 // VaccinationScheduleScreen component
 const VaccinationScheduleScreen = ({ navigation }) => {
   const { fontSize, theme } = useContext(SettingsContext);
   const [vaccinations, setVaccinations] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const isDarkTheme = theme === "dark";
 
   // Fetch vaccination records from the server
@@ -30,7 +33,7 @@ const VaccinationScheduleScreen = ({ navigation }) => {
             setVaccinations(JSON.parse(cachedVaccinations));
           }
 
-          const response = await fetch("http://192.168.1.39:3000/vaccination", {
+          const response = await fetch(`${API_URL}/vaccination`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -44,13 +47,35 @@ const VaccinationScheduleScreen = ({ navigation }) => {
           setVaccinations(json);
           await AsyncStorage.setItem("vaccinations", JSON.stringify(json));
         } catch (error) {
-          console.error("Failed to fetch vaccinations", error);
+          console.error("Network request failed:", error);
+          Alert.alert(
+            "Network Error",
+            "Failed to get vaccination logs. Please check your network connection."
+          );
+
+          const cachedVaccinations = await AsyncStorage.getItem("vaccinations");
+          if (cachedVaccinations) {
+            console.log("Fetching data from AsyncStorage");
+            setVaccinations(JSON.parse(cachedVaccinations));
+          } else {
+            console.log("No cached data available");
+            setVaccinations([]);
+          }
+        } finally {
+          setIsLoading(false);
         }
       };
 
       fetchVaccinations();
     }, [])
   );
+
+  // Display a loading indicator while fetching health logs
+  if (isLoading) {
+    return (
+      <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
+    );
+  }
 
   return (
     <SafeAreaView

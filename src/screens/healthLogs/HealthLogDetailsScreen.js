@@ -1,10 +1,10 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { Text, StyleSheet, Alert, ActivityIndicator, View } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SettingsContext } from "../../context/SettingsContext";
 import Button from "../../components/Button";
 import Container from "../../components/Container";
+import { API_URL } from "@env";
 
 // HealthLogDetailsScreen component
 const HealthLogDetailsScreen = ({ route, navigation }) => {
@@ -14,27 +14,23 @@ const HealthLogDetailsScreen = ({ route, navigation }) => {
   const isDarkTheme = theme === "dark";
 
   // Fetch the health log details from the server
-  useFocusEffect(
-    React.useCallback(() => {
-      const fetchLogDetails = async () => {
-        try {
-          const token = await AsyncStorage.getItem("token");
-          const cachedLogDetails = await AsyncStorage.getItem(
-            `healthLog-${logId}`
-          );
-
-          if (cachedLogDetails) {
-            setLogDetails(JSON.parse(cachedLogDetails));
-          }
-
-          const response = await fetch(
-            `http://192.168.1.39:3000/health-logs/${logId}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
+  useEffect(() => {
+    const fetchLogDetails = async () => {
+      try {
+        const token = await AsyncStorage.getItem("token");
+        const cachedLogDetails = await AsyncStorage.getItem(
+          `healthLog-${logId}`
+        );
+        if (cachedLogDetails) {
+          console.log("Fetching data from AsyncStorage");
+          setLogDetails(JSON.parse(cachedLogDetails));
+        } else {
+          console.log("Fetching data from the server");
+          const response = await fetch(`${API_URL}/health-logs/${logId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
 
           if (!response.ok) {
             throw new Error("Failed to fetch from server");
@@ -50,29 +46,26 @@ const HealthLogDetailsScreen = ({ route, navigation }) => {
           } else {
             throw new Error(json.message || "Unable to fetch log details");
           }
-        } catch (error) {
-          Alert.alert("Error", error.message);
-          setLogDetails(null);
         }
-      };
+      } catch (error) {
+        Alert.alert("Error", error.message);
+        setLogDetails(null);
+      }
+    };
 
-      fetchLogDetails();
-    }, [logId])
-  );
+    fetchLogDetails();
+  }, [logId]);
 
   // Handle the deletion of the health log entry
   const handleDeleteLog = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
-      const response = await fetch(
-        `http://192.168.1.39:3000/health-logs/${logId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_URL}/health-logs/${logId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (response.ok) {
         await AsyncStorage.removeItem(`healthLog-${logId}`);
         Alert.alert("Success", "Health log deleted successfully", [

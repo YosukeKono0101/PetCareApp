@@ -7,6 +7,7 @@ import InputField from "../../components/InputField";
 import DatePickerField from "../../components/DatePickerField";
 import Button from "../../components/Button";
 import Container from "../../components/Container";
+import { API_URL } from "@env";
 
 const AddHealthLogScreen = ({ navigation }) => {
   const { fontSize, theme } = useContext(SettingsContext);
@@ -30,7 +31,7 @@ const AddHealthLogScreen = ({ navigation }) => {
           }
         }
 
-        const response = await fetch("http://192.168.1.39:3000/pets", {
+        const response = await fetch(`${API_URL}/pets`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -57,7 +58,7 @@ const AddHealthLogScreen = ({ navigation }) => {
     // Add the health log to the server
     try {
       const token = await AsyncStorage.getItem("token");
-      const response = await fetch("http://192.168.1.39:3000/health-logs", {
+      const response = await fetch(`${API_URL}/health-logs`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

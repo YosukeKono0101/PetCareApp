@@ -1,10 +1,10 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { Text, StyleSheet, Alert, ActivityIndicator, View } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SettingsContext } from "../../context/SettingsContext";
 import Button from "../../components/Button";
 import Container from "../../components/Container";
+import { API_URL } from "@env";
 
 // VaccinationDetailsScreen component
 const VaccinationDetailsScreen = ({ route, navigation }) => {
@@ -14,21 +14,21 @@ const VaccinationDetailsScreen = ({ route, navigation }) => {
   const isDarkTheme = theme === "dark";
 
   // Fetch the vaccination details from the server
-  useFocusEffect(
-    React.useCallback(() => {
-      const fetchVaccinationDetails = async () => {
-        try {
-          const token = await AsyncStorage.getItem("token");
-          const cachedDetails = await AsyncStorage.getItem(
-            `vaccination-${vaccinationId}`
-          );
+  useEffect(() => {
+    const fetchVaccinationDetails = async () => {
+      try {
+        const token = await AsyncStorage.getItem("token");
 
-          if (cachedDetails) {
-            setVaccinationDetails(JSON.parse(cachedDetails));
-          }
-
+        const cachedDetails = await AsyncStorage.getItem(
+          `vaccination-${vaccinationId}`
+        );
+        if (cachedDetails) {
+          console.log("Fetching data from AsyncStorage");
+          setVaccinationDetails(JSON.parse(cachedDetails));
+        } else {
+          console.log("Fetching data from the server");
           const response = await fetch(
-            `http://192.168.1.39:3000/vaccination/${vaccinationId}`,
+            `${API_URL}/vaccination/${vaccinationId}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -52,29 +52,25 @@ const VaccinationDetailsScreen = ({ route, navigation }) => {
               json.message || "Unable to fetch vaccination details"
             );
           }
-        } catch (error) {
-          Alert.alert("Error", error.message);
-          setVaccinationDetails(null);
         }
-      };
-
-      fetchVaccinationDetails();
-    }, [vaccinationId])
-  );
+      } catch (error) {
+        Alert.alert("Error", error.message);
+        setVaccinationDetails(null);
+      }
+    };
+    fetchVaccinationDetails();
+  }, [vaccinationId]);
 
   // Delete the vaccination record from the server
   const handleDeleteVaccination = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
-      const response = await fetch(
-        `http://192.168.1.39:3000/vaccination/${vaccinationId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await fetch(`${API_URL}/vaccination/${vaccinationId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const json = await response.json();
       if (response.ok) {
         await AsyncStorage.removeItem(`vaccination-${vaccinationId}`);
