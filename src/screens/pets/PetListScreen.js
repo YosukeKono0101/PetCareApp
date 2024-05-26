@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
+  Alert,
   Image,
   TouchableOpacity,
   SafeAreaView,
@@ -55,6 +56,7 @@ const PetListScreen = ({ navigation }) => {
             setPets([]);
           }
         } catch (error) {
+          console.error("Network request failed:", error);
           Alert.alert(
             "Network Error",
             "Failed to get pets. Please check your network connection."

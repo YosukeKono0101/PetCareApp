@@ -111,7 +111,7 @@ const AddHealthLogScreen = ({ navigation }) => {
         fontSize={fontSize}
         multiline
         numberOfLines={4}
-        height={100} // customized height
+        height={100}
       />
       <Button
         onPress={handleAddHealthLog}

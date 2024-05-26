@@ -16,7 +16,6 @@ const AddVaccinationRecordScreen = ({ navigation }) => {
   const [selectedPetId, setSelectedPetId] = useState(null);
   const [vaccineName, setVaccineName] = useState("");
   const [vaccinationDate, setVaccinationDate] = useState(new Date());
-  const [notes, setNotes] = useState("");
   const vaccines = ["Rabies", "DHPP", "Leptospirosis", "Lyme", "Bordetella"];
   const isDarkTheme = theme === "dark";
 
@@ -55,7 +54,7 @@ const AddVaccinationRecordScreen = ({ navigation }) => {
   }, []);
 
   const handleAddVaccination = async () => {
-    if (!selectedPetId || !vaccineName || !vaccinationDate || !notes) {
+    if (!selectedPetId || !vaccineName || !vaccinationDate) {
       Alert.alert("Error", "Please fill in all the fields.");
       return;
     }
@@ -71,7 +70,6 @@ const AddVaccinationRecordScreen = ({ navigation }) => {
           pet_id: selectedPetId,
           vaccine_name: vaccineName,
           vaccination_date: vaccinationDate.toISOString(),
-          notes: notes,
         }),
       });
 
@@ -115,15 +113,6 @@ const AddVaccinationRecordScreen = ({ navigation }) => {
         setDate={setVaccinationDate}
         isDarkTheme={isDarkTheme}
         fontSize={fontSize}
-      />
-      <InputField
-        value={notes}
-        onChangeText={setNotes}
-        placeholder="Notes"
-        isDarkTheme={isDarkTheme}
-        fontSize={fontSize}
-        multiline
-        height={100} // customized height
       />
       <Button
         onPress={handleAddVaccination}
