@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import {
   View,
   Text,
@@ -6,30 +6,32 @@ import {
   ScrollView,
   Linking,
   TouchableOpacity,
+  Button,
 } from "react-native";
+import Collapsible from "react-native-collapsible";
 import { SettingsContext } from "../../context/SettingsContext";
-
-// Array of open source licenses used in the app
-const licenses = [
-  {
-    name: "React",
-    license: "MIT",
-    link: "https://github.com/facebook/react/blob/main/LICENSE",
-  },
-  {
-    name: "React Native",
-    license: "MIT",
-    link: "https://github.com/facebook/react-native/blob/main/LICENSE",
-  },
-];
+import licenses from "../../../licenses.json";
 
 // About screen component
 const AboutScreen = () => {
   const { fontSize, theme } = useContext(SettingsContext);
   const isDarkTheme = theme === "dark";
+  const [expandedIndex, setExpandedIndex] = useState(null);
+  const [displayCount, setDisplayCount] = useState(10);
+
+  const handleToggleExpand = (index) => {
+    setExpandedIndex(expandedIndex === index ? null : index);
+  };
+
+  const handleShowMore = () => {
+    setDisplayCount(displayCount + 10);
+  };
+
+  const displayedLicenses = Object.keys(licenses).slice(0, displayCount);
 
   return (
     <ScrollView
+      contentContainerStyle={styles.scrollContent}
       style={[
         styles.container,
         isDarkTheme ? styles.darkContainer : styles.lightContainer,
@@ -57,31 +59,46 @@ const AboutScreen = () => {
       >
         Open Source Licenses
       </Text>
-      {licenses.map((license, index) => (
+      {displayedLicenses.map((key, index) => (
         <View key={index} style={styles.licenseContainer}>
-          <Text
-            style={[
-              styles.licenseName,
-              { fontSize },
-              isDarkTheme && styles.darkText,
-            ]}
-          >
-            {license.name}
-          </Text>
-          <Text
-            style={[
-              styles.licenseText,
-              { fontSize },
-              isDarkTheme && styles.darkText,
-            ]}
-          >
-            {license.license}
-          </Text>
-          <TouchableOpacity onPress={() => Linking.openURL(license.link)}>
-            <Text style={styles.licenseLink}>{license.link}</Text>
+          <TouchableOpacity onPress={() => handleToggleExpand(index)}>
+            <Text
+              style={[
+                styles.licenseName,
+                { fontSize },
+                isDarkTheme && styles.darkText,
+              ]}
+            >
+              {key}
+            </Text>
           </TouchableOpacity>
+          <Collapsible collapsed={expandedIndex !== index}>
+            <View style={styles.collapsibleContent}>
+              <Text
+                style={[
+                  styles.licenseText,
+                  { fontSize },
+                  isDarkTheme && styles.darkText,
+                ]}
+              >
+                {licenses[key].licenses}
+              </Text>
+              <TouchableOpacity
+                onPress={() => Linking.openURL(licenses[key].licenseUrl)}
+              >
+                <Text style={styles.licenseLink}>
+                  {licenses[key].licenseUrl}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Collapsible>
         </View>
       ))}
+      {displayCount < Object.keys(licenses).length && (
+        <View style={styles.showMoreContainer}>
+          <Button title="Show More" onPress={handleShowMore} />
+        </View>
+      )}
     </ScrollView>
   );
 };
@@ -89,7 +106,10 @@ const AboutScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollContent: {
     padding: 20,
+    paddingBottom: 100,
   },
   lightContainer: {
     backgroundColor: "#f0f0f0",
@@ -116,6 +136,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
   },
+  collapsibleContent: {
+    paddingTop: 10,
+    paddingBottom: 10,
+  },
   licenseText: {
     fontSize: 16,
     color: "#555",
@@ -126,6 +150,10 @@ const styles = StyleSheet.create({
   },
   darkText: {
     color: "#fff",
+  },
+  showMoreContainer: {
+    alignItems: "center",
+    marginTop: 20,
   },
 });
 
