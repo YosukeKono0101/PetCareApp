@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useCallback } from "react";
 import {
   Text,
   Image,
@@ -11,6 +11,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SettingsContext } from "../../context/SettingsContext";
 import Button from "../../components/Button";
 import Container from "../../components/Container";
+import { useFocusEffect } from "@react-navigation/native";
 import { API_URL } from "@env";
 
 // PetDetailsScreen component
@@ -21,45 +22,47 @@ const PetDetailsScreen = ({ route, navigation }) => {
   const isDarkTheme = theme === "dark";
 
   // Fetch the pet details from the server
-  useEffect(() => {
-    const fetchPetDetails = async () => {
-      try {
-        const token = await AsyncStorage.getItem("token");
+  useFocusEffect(
+    useCallback(() => {
+      const fetchPetDetails = async () => {
+        try {
+          const token = await AsyncStorage.getItem("token");
 
-        // Check if pet details are available in AsyncStorage
-        const cachedPetDetails = await AsyncStorage.getItem(`pet-${petId}`);
-        if (cachedPetDetails) {
-          console.log("Fetching data from AsyncStorage");
-          setPetDetails(JSON.parse(cachedPetDetails));
-        } else {
-          console.log("Fetching data from the server");
-          const response = await fetch(`${API_URL}/pets/${petId}`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-
-          if (!response.ok) {
-            throw new Error("Failed to fetch from server");
-          }
-
-          const json = await response.json();
-          // Update the state with the pet details
-          if (response.ok) {
-            setPetDetails(json);
-            await AsyncStorage.setItem(`pet-${petId}`, JSON.stringify(json));
+          // Check if pet details are available in AsyncStorage
+          const cachedPetDetails = await AsyncStorage.getItem(`pet-${petId}`);
+          if (cachedPetDetails) {
+            console.log("Fetching data from AsyncStorage");
+            setPetDetails(JSON.parse(cachedPetDetails));
           } else {
-            throw new Error(json.message || "Unable to fetch data");
-          }
-        }
-      } catch (error) {
-        Alert.alert("Error", error.message);
-        setPetDetails(null);
-      }
-    };
+            console.log("Fetching data from the server");
+            const response = await fetch(`${API_URL}/pets/${petId}`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
 
-    fetchPetDetails();
-  }, [petId]);
+            if (!response.ok) {
+              throw new Error("Failed to fetch from server");
+            }
+
+            const json = await response.json();
+            // Update the state with the pet details
+            if (response.ok) {
+              setPetDetails(json);
+              await AsyncStorage.setItem(`pet-${petId}`, JSON.stringify(json));
+            } else {
+              throw new Error(json.message || "Unable to fetch data");
+            }
+          }
+        } catch (error) {
+          Alert.alert("Error", error.message);
+          setPetDetails(null);
+        }
+      };
+
+      fetchPetDetails();
+    }, [petId])
+  );
 
   // Handle the deletion of the pet
   const handleDeletePet = async () => {
